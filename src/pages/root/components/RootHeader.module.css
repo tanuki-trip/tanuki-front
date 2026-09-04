@@ -1,0 +1,213 @@
+.header {
+    position: relative;
+    z-index: 10;
+    background: #ffffff;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.inner {
+    display: flex;
+    width: min(100%, 1184px);
+    height: 72px;
+    margin: 0 auto;
+    padding: 0 32px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: #000000;
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.brandIcon {
+    width: 27px;
+    height: 27px;
+    fill: currentColor;
+    stroke-width: 1.5;
+}
+
+.wordmark:focus-visible,
+.accountButton:focus-visible,
+.signOutButton:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 3px;
+}
+
+.account {
+    position: relative;
+}
+
+.accountButton {
+    display: flex;
+    min-width: 70px;
+    height: 44px;
+    padding: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    color: #000000;
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.accountButton > svg {
+    width: 19px;
+    height: 19px;
+    transition: transform 160ms ease;
+}
+
+.accountButton .chevronOpen {
+    transform: rotate(180deg);
+}
+
+.avatar {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    color: #4f4f4f;
+    background: #f4f4f4;
+    border: 1px solid #e4e4e4;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.avatar svg {
+    width: 21px;
+    height: 21px;
+    stroke-width: 1.8;
+}
+
+.profileImage {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.popover {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 248px;
+    padding: 8px;
+    background: #ffffff;
+    border: 1px solid #dedede;
+    border-radius: 12px;
+    box-shadow: 0 14px 36px rgb(0 0 0 / 12%);
+}
+
+.accountInfo {
+    display: grid;
+    min-width: 0;
+    padding: 10px 10px 12px;
+    gap: 3px;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.accountInfo strong,
+.accountInfo span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.accountInfo strong {
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.accountInfo span {
+    color: #777777;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.signOutButton {
+    display: flex;
+    width: 100%;
+    min-height: 42px;
+    margin-top: 6px;
+    padding: 0 10px;
+    align-items: center;
+    gap: 10px;
+    color: #000000;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.signOutButton:hover {
+    background: #f3f3f3;
+}
+
+.signOutButton:disabled {
+    color: #888888;
+    cursor: wait;
+}
+
+.signOutButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+.error {
+    margin: 4px 10px 8px;
+    color: #b42318;
+    font-size: 12px;
+    line-height: 1.45;
+    word-break: keep-all;
+}
+
+@media (max-width: 600px) {
+    .inner {
+        height: 64px;
+        padding: 0 18px;
+    }
+
+    .wordmark {
+        font-size: 23px;
+        gap: 8px;
+    }
+
+    .brandIcon {
+        width: 25px;
+        height: 25px;
+    }
+
+    .accountButton {
+        min-width: 64px;
+        height: 40px;
+        gap: 7px;
+    }
+
+    .avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .popover {
+        top: calc(100% + 8px);
+        width: min(248px, calc(100vw - 36px));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .accountButton > svg {
+        transition: none;
+    }
+}

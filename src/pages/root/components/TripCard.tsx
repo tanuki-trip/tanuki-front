@@ -18,6 +18,9 @@ import styles from "./TripCard.module.css";
 type TripCardProps = {
     trip: Trip;
     imagePriority?: boolean;
+    variant?: "standard" | "featured";
+    daysUntilStart?: number;
+    headingLevel?: 2 | 3;
     onEdit: (trip: Trip, trigger: HTMLButtonElement) => void;
     onDelete: (trip: Trip, trigger: HTMLButtonElement) => void;
 };
@@ -25,12 +28,17 @@ type TripCardProps = {
 export function TripCard({
     trip,
     imagePriority = false,
+    variant = "standard",
+    daysUntilStart,
+    headingLevel = 2,
     onEdit,
     onDelete,
 }: TripCardProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement | null>(null);
     const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
+    const Title = headingLevel === 2 ? "h2" : "h3";
+    const isFeatured = variant === "featured";
 
     useEffect(() => {
         if (!isMenuOpen) {
@@ -103,7 +111,10 @@ export function TripCard({
     };
 
     return (
-        <article className={styles.card} aria-labelledby={`${trip.id}-title`}>
+        <article
+            className={`${styles.card} ${isFeatured ? styles.featured : ""}`}
+            aria-labelledby={`${trip.id}-title`}
+        >
             <div className={styles.cover}>
                 <img
                     className={styles.coverImage}
@@ -113,6 +124,18 @@ export function TripCard({
                     fetchPriority={imagePriority ? "high" : undefined}
                     decoding="async"
                 />
+                {isFeatured && daysUntilStart !== undefined ? (
+                    <span
+                        className={styles.dayBadge}
+                        aria-label={
+                            daysUntilStart === 0
+                                ? "오늘 출발"
+                                : `${daysUntilStart}일 후 출발`
+                        }
+                    >
+                        {daysUntilStart === 0 ? "D-DAY" : `D-${daysUntilStart}`}
+                    </span>
+                ) : null}
                 <div className={styles.cardHeader}>
                     <div className={styles.countryGroup}>
                         <CountryFlag
@@ -121,67 +144,64 @@ export function TripCard({
                         />
                         <p className={styles.country}>{trip.country}</p>
                     </div>
-                    <div
-                        className={styles.menuControl}
-                        ref={menuRef}
-                        onBlur={(event) => {
-                            if (
-                                !event.currentTarget.contains(
-                                    event.relatedTarget,
-                                )
-                            ) {
-                                setIsMenuOpen(false);
-                            }
-                        }}
-                    >
-                        <button
-                            className={styles.menuButton}
-                            ref={menuTriggerRef}
-                            type="button"
-                            aria-expanded={isMenuOpen}
-                            aria-haspopup="menu"
-                            aria-label={`${trip.name} 메뉴 열기`}
-                            onClick={() => setIsMenuOpen((isOpen) => !isOpen)}
-                        >
-                            <EllipsisVertical aria-hidden="true" />
-                        </button>
-
-                        {isMenuOpen ? (
-                            <div
-                                className={styles.popover}
-                                role="menu"
-                                aria-label={`${trip.name} 관리`}
-                                onKeyDown={handleMenuKeyDown}
-                            >
-                                <button
-                                    className={styles.popoverButton}
-                                    type="button"
-                                    role="menuitem"
-                                    autoFocus
-                                    onClick={() => openDialog("edit")}
-                                >
-                                    <Pencil aria-hidden="true" />
-                                    이름 수정
-                                </button>
-                                <button
-                                    className={styles.popoverButton}
-                                    type="button"
-                                    role="menuitem"
-                                    onClick={() => openDialog("delete")}
-                                >
-                                    <Trash2 aria-hidden="true" />
-                                    삭제
-                                </button>
-                            </div>
-                        ) : null}
-                    </div>
                 </div>
             </div>
 
+            <div
+                className={styles.menuControl}
+                ref={menuRef}
+                onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget)) {
+                        setIsMenuOpen(false);
+                    }
+                }}
+            >
+                <button
+                    className={styles.menuButton}
+                    ref={menuTriggerRef}
+                    type="button"
+                    aria-expanded={isMenuOpen}
+                    aria-haspopup="menu"
+                    aria-label={`${trip.name} 메뉴 열기`}
+                    onClick={() => setIsMenuOpen((isOpen) => !isOpen)}
+                >
+                    <EllipsisVertical aria-hidden="true" />
+                </button>
+
+                {isMenuOpen ? (
+                    <div
+                        className={styles.popover}
+                        role="menu"
+                        aria-label={`${trip.name} 관리`}
+                        onKeyDown={handleMenuKeyDown}
+                    >
+                        <button
+                            className={styles.popoverButton}
+                            type="button"
+                            role="menuitem"
+                            autoFocus
+                            onClick={() => openDialog("edit")}
+                        >
+                            <Pencil aria-hidden="true" />
+                            이름 수정
+                        </button>
+                        <button
+                            className={styles.popoverButton}
+                            type="button"
+                            role="menuitem"
+                            onClick={() => openDialog("delete")}
+                        >
+                            <Trash2 aria-hidden="true" />
+                            삭제
+                        </button>
+                    </div>
+                ) : null}
+            </div>
+
             <div className={styles.cardBody}>
-                <h2 className={styles.cardTitle} id={`${trip.id}-title`}>
+                <Title className={styles.cardTitle} id={`${trip.id}-title`}>
                     {trip.name}
-                </h2>
+                </Title>
 
                 <div className={styles.meta}>
                     <p className={`${styles.metaItem} ${styles.tripDetails}`}>

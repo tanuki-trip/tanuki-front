@@ -1,38 +1,51 @@
 .page {
-    position: relative;
     min-height: 100dvh;
-    padding: clamp(24px, 4vw, 48px);
-    padding-bottom: 120px;
     color: #000000;
     background: #ffffff;
 }
 
 .container {
-    width: min(100%, 1120px);
+    width: min(100%, 1184px);
+    min-height: calc(100dvh - 73px);
     margin: 0 auto;
+    padding: 42px 32px 120px;
 }
 
-.header {
-    position: relative;
-    z-index: 1;
+.sectionHeader {
     display: flex;
-    min-height: 72px;
+    min-height: 48px;
     align-items: center;
-    border-bottom: 1px solid #e8e8e8;
+    justify-content: space-between;
+    gap: 24px;
 }
 
-.title {
+.sectionTitle,
+.subsectionTitle {
     margin: 0;
-    font-size: clamp(30px, 3vw, 34px);
     font-weight: 700;
     letter-spacing: -0.045em;
     line-height: 1.2;
 }
 
+.sectionTitle {
+    font-size: clamp(30px, 3vw, 34px);
+}
+
+.subsectionTitle {
+    font-size: 27px;
+}
+
+.featuredCard {
+    margin-top: 24px;
+}
+
+.otherSection {
+    margin-top: 48px;
+}
+
 .empty {
-    position: absolute;
-    inset: 0;
     display: grid;
+    min-height: calc(100dvh - 263px);
     place-items: center;
     color: #777777;
     text-align: center;
@@ -48,7 +61,7 @@
 
 .list {
     display: grid;
-    margin: 32px 0 0;
+    margin: 24px 0 0;
     padding: 0;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
@@ -56,13 +69,9 @@
 }
 
 .addButton {
-    position: fixed;
-    z-index: 1;
-    right: max(clamp(20px, 3vw, 36px), env(safe-area-inset-right));
-    bottom: max(clamp(20px, 3vw, 36px), env(safe-area-inset-bottom));
     display: inline-flex;
-    min-height: 56px;
-    padding: 0 22px;
+    min-height: 48px;
+    padding: 0 20px;
     align-items: center;
     justify-content: center;
     gap: 8px;
@@ -71,9 +80,10 @@
     border: 0;
     border-radius: 999px;
     font: inherit;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 650;
     text-decoration: none;
+    white-space: nowrap;
     cursor: pointer;
 }
 
@@ -91,24 +101,56 @@
     height: 20px;
 }
 
-@media (max-width: 600px) {
-    .page {
-        padding: 20px 16px 112px;
-    }
-
-    .header {
-        min-height: 60px;
-    }
-
-    .list {
-        margin-top: 24px;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-    }
-}
-
 @media (min-width: 601px) and (max-width: 900px) {
     .list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        min-height: calc(100dvh - 65px);
+        padding: 28px 16px 112px;
+    }
+
+    .sectionHeader {
+        min-height: 36px;
+    }
+
+    .sectionTitle {
+        font-size: 28px;
+    }
+
+    .subsectionTitle {
+        font-size: 24px;
+    }
+
+    .featuredCard {
+        margin-top: 18px;
+    }
+
+    .otherSection {
+        margin-top: 38px;
+    }
+
+    .list {
+        margin-top: 18px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .empty {
+        min-height: calc(100dvh - 213px);
+    }
+
+    .addButton {
+        position: fixed;
+        z-index: 8;
+        right: max(18px, env(safe-area-inset-right));
+        bottom: max(18px, env(safe-area-inset-bottom));
+        min-height: 54px;
+        padding: 0 21px;
+        font-size: 16px;
+        box-shadow: 0 10px 28px rgb(0 0 0 / 18%);
     }
 }

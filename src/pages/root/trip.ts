@@ -4,6 +4,9 @@ import thailandCover from "../../assets/trip-covers/thailand.webp";
 import usaCover from "../../assets/trip-covers/usa.webp";
 import vietnamCover from "../../assets/trip-covers/vietnam.webp";
 import type { CountryCode } from "../../trips/countries";
+import type { Trip } from "../../trips/store";
+
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const tripCoverByCountry: Record<CountryCode, string> = {
     CN: chinaCover,
@@ -36,4 +39,41 @@ export function formatCompactEndDate(startDate: string, endDate: string) {
     }
 
     return endDay;
+}
+
+function dateToUtcTimestamp(date: string) {
+    const [year, month, day] = date.split("-").map(Number);
+
+    return Date.UTC(year, month - 1, day);
+}
+
+export function getDaysUntilTrip(startDate: string, today = new Date()) {
+    const todayTimestamp = Date.UTC(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate(),
+    );
+
+    return Math.round(
+        (dateToUtcTimestamp(startDate) - todayTimestamp) / MILLISECONDS_PER_DAY,
+    );
+}
+
+export function getTripSections<T extends Pick<Trip, "id" | "startDate">>(
+    trips: T[],
+    today = new Date(),
+) {
+    const sortedTrips = [...trips].sort((left, right) =>
+        left.startDate.localeCompare(right.startDate),
+    );
+    const upcomingTrip = sortedTrips.find(
+        (trip) => getDaysUntilTrip(trip.startDate, today) >= 0,
+    );
+
+    return {
+        upcomingTrip,
+        otherTrips: upcomingTrip
+            ? sortedTrips.filter((trip) => trip.id !== upcomingTrip.id)
+            : sortedTrips,
+    };
 }

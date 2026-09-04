@@ -1,9 +1,15 @@
 .card {
+    position: relative;
     display: flex;
     flex-direction: column;
     background: #ffffff;
     border: 1px solid #dedede;
     border-radius: 14px;
+}
+
+.featured {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.95fr);
 }
 
 .cover {
@@ -26,6 +32,26 @@
     height: 100%;
     object-fit: cover;
     border-radius: 13px 13px 0 0;
+}
+
+.dayBadge {
+    position: absolute;
+    z-index: 2;
+    top: 16px;
+    left: 16px;
+    display: inline-flex;
+    min-height: 36px;
+    padding: 0 14px;
+    align-items: center;
+    color: #ffffff;
+    background: rgb(0 0 0 / 66%);
+    border: 1px solid rgb(255 255 255 / 18%);
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums;
+    backdrop-filter: blur(8px);
 }
 
 .cardHeader {
@@ -145,6 +171,49 @@
     padding: 18px 22px 20px;
 }
 
+.featured .cover {
+    height: 276px;
+}
+
+.featured .coverImage {
+    border-radius: 13px 0 0 13px;
+}
+
+.featured .cover::after {
+    border-radius: 0 0 0 13px;
+}
+
+.featured .menuButton {
+    background: #f7f7f7;
+    border-color: #e2e2e2;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.featured .cardBody {
+    display: flex;
+    padding: 36px;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.featured .cardTitle {
+    font-size: 30px;
+}
+
+.featured .meta {
+    margin-top: 16px;
+}
+
+.featured .metaItem {
+    font-size: 15px;
+}
+
+.featured .metaItem svg {
+    width: 19px;
+    height: 19px;
+}
+
 .cardTitle {
     margin: 0;
     font-size: 24px;
@@ -195,13 +264,46 @@
     color: #aaaaaa;
 }
 
+@media (max-width: 760px) {
+    .featured {
+        display: flex;
+    }
+
+    .featured .cover {
+        height: clamp(190px, 53vw, 230px);
+    }
+
+    .featured .coverImage {
+        border-radius: 13px 13px 0 0;
+    }
+
+    .featured .cover::after {
+        border-radius: 0;
+    }
+
+    .featured .menuButton {
+        background: rgb(255 255 255 / 90%);
+        border-color: rgb(255 255 255 / 60%);
+        box-shadow: 0 2px 10px rgb(0 0 0 / 10%);
+        backdrop-filter: blur(8px);
+    }
+
+    .featured .cardBody {
+        padding: 20px;
+    }
+
+    .featured .cardTitle {
+        font-size: 26px;
+    }
+}
+
 @media (max-width: 600px) {
     .card {
         border-radius: 12px;
     }
 
     .cover {
-        height: 92px;
+        height: 108px;
     }
 
     .coverImage {
@@ -276,5 +378,74 @@
     .tripDetails {
         gap: 3px;
         letter-spacing: -0.02em;
+    }
+
+    .featured .cover {
+        height: clamp(184px, 55vw, 218px);
+    }
+
+    .featured .cardBody {
+        padding: 18px;
+    }
+
+    .featured .cardTitle {
+        font-size: 25px;
+    }
+
+    .featured .meta {
+        margin-top: 10px;
+    }
+
+    .featured .metaItem {
+        font-size: 14px;
+    }
+
+    .dayBadge {
+        top: 12px;
+        left: 12px;
+        min-height: 32px;
+        padding: 0 12px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 350px) {
+    .cardBody {
+        padding: 12px 10px;
+    }
+
+    .cardTitle {
+        font-size: 16px;
+    }
+
+    .metaItem {
+        font-size: 11px;
+    }
+
+    .metaItem svg {
+        width: 13px;
+        height: 13px;
+    }
+
+    .tripDetails {
+        gap: 2px;
+        letter-spacing: -0.04em;
+    }
+
+    .featured .cardBody {
+        padding: 18px;
+    }
+
+    .featured .cardTitle {
+        font-size: 25px;
+    }
+
+    .featured .metaItem {
+        font-size: 14px;
+    }
+
+    .featured .metaItem svg {
+        width: 19px;
+        height: 19px;
     }
 }
