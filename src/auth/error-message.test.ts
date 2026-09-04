@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { getGoogleSignInErrorMessage } from "./error-message";
+import {
+    getGoogleSignInErrorMessage,
+    getGoogleSignOutErrorMessage,
+} from "./error-message";
 
 const ignoredErrors = [
     "auth/popup-closed-by-user",
@@ -40,5 +43,21 @@ describe("getGoogleSignInErrorMessage", () => {
         expect(
             getGoogleSignInErrorMessage(new Error("private provider detail")),
         ).toBe("Google 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+    });
+});
+
+describe("getGoogleSignOutErrorMessage", () => {
+    it("maps a network failure", () => {
+        expect(
+            getGoogleSignOutErrorMessage({
+                code: "auth/network-request-failed",
+            }),
+        ).toBe("네트워크 연결을 확인하고 다시 시도해 주세요.");
+    });
+
+    it("does not expose unknown provider errors", () => {
+        expect(
+            getGoogleSignOutErrorMessage(new Error("private provider detail")),
+        ).toBe("로그아웃에 실패했습니다. 잠시 후 다시 시도해 주세요.");
     });
 });

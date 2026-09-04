@@ -11,6 +11,7 @@ import {
     onAuthStateChanged,
     setPersistence,
     signInWithPopup,
+    signOut,
     type Auth,
     type User,
 } from "firebase/auth";
@@ -86,4 +87,12 @@ export async function openGoogleSignIn() {
 
     await setPersistence(auth, browserLocalPersistence);
     await signInWithPopup(auth, googleProvider);
+}
+
+export async function closeFirebaseSession() {
+    const auth = getConfiguredAuth();
+
+    if (!auth) throw new FirebaseAuthSetupError();
+
+    await signOut(auth);
 }

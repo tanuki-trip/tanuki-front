@@ -2,8 +2,12 @@ import { create } from "zustand";
 
 import type { User } from "firebase/auth";
 
-import { getGoogleSignInErrorMessage } from "./error-message";
 import {
+    getGoogleSignInErrorMessage,
+    getGoogleSignOutErrorMessage,
+} from "./error-message";
+import {
+    closeFirebaseSession,
     isFirebaseConfigured,
     observeFirebaseAuth,
     openGoogleSignIn,
@@ -22,9 +26,11 @@ type AuthState = {
     status: AuthStatus;
     user: AuthUser | null;
     isSigningIn: boolean;
+    isSigningOut: boolean;
     authError: string | null;
     startAuthObserver: () => () => void;
     signInWithGoogle: () => Promise<void>;
+    signOut: () => Promise<void>;
 };
 
 function toAuthUser(user: User): AuthUser {
@@ -40,6 +46,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     status: isFirebaseConfigured() ? "checking" : "guest",
     user: null,
     isSigningIn: false,
+    isSigningOut: false,
     authError: null,
     startAuthObserver: () =>
         observeFirebaseAuth(
@@ -69,6 +76,19 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
             set({ authError: getGoogleSignInErrorMessage(error) });
         } finally {
             set({ isSigningIn: false });
+        }
+    },
+    signOut: async () => {
+        if (get().isSigningOut) return;
+
+        set({ isSigningOut: true, authError: null });
+
+        try {
+            await closeFirebaseSession();
+        } catch (error) {
+            set({ authError: getGoogleSignOutErrorMessage(error) });
+        } finally {
+            set({ isSigningOut: false });
         }
     },
 }));

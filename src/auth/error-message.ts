@@ -28,3 +28,13 @@ export function getGoogleSignInErrorMessage(error: unknown) {
             return "Google 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.";
     }
 }
+
+export function getGoogleSignOutErrorMessage(error: unknown) {
+    const code = hasStringCode(error) ? error.code : "";
+
+    if (code === "auth/network-request-failed") {
+        return "네트워크 연결을 확인하고 다시 시도해 주세요.";
+    }
+
+    return "로그아웃에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+}
