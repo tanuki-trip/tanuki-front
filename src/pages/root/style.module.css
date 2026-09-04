@@ -1,3 +1,113 @@
 .page {
+    position: relative;
     min-height: 100dvh;
+    padding: clamp(24px, 4vw, 48px);
+    padding-bottom: 120px;
+    color: #000000;
+    background: #ffffff;
+}
+
+.container {
+    width: min(100%, 1120px);
+    margin: 0 auto;
+}
+
+.header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    min-height: 72px;
+    align-items: center;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.title {
+    margin: 0;
+    font-size: clamp(30px, 3vw, 34px);
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    line-height: 1.2;
+}
+
+.empty {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #777777;
+    text-align: center;
+}
+
+.empty p {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 500;
+    line-height: 1.5;
+    word-break: keep-all;
+}
+
+.list {
+    display: grid;
+    margin: 32px 0 0;
+    padding: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    list-style: none;
+}
+
+.addButton {
+    position: fixed;
+    z-index: 1;
+    right: max(clamp(20px, 3vw, 36px), env(safe-area-inset-right));
+    bottom: max(clamp(20px, 3vw, 36px), env(safe-area-inset-bottom));
+    display: inline-flex;
+    min-height: 56px;
+    padding: 0 22px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #ffffff;
+    background: #000000;
+    border: 0;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 17px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.addButton:hover {
+    background: #222222;
+}
+
+.addButton:focus-visible {
+    outline: 3px solid #000000;
+    outline-offset: 4px;
+}
+
+.addButton svg {
+    width: 20px;
+    height: 20px;
+}
+
+@media (max-width: 600px) {
+    .page {
+        padding: 20px 16px 112px;
+    }
+
+    .header {
+        min-height: 60px;
+    }
+
+    .list {
+        margin-top: 24px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+    .list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
