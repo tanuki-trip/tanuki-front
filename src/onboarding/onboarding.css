@@ -1,0 +1,302 @@
+.onboarding {
+    --onboarding-gutter: clamp(20px, 2.5vw, 32px);
+
+    display: grid;
+    min-height: 100dvh;
+    grid-template-rows: 1fr;
+    padding: 0 var(--onboarding-gutter) 108px;
+    overflow-x: clip;
+    color: #000000;
+    background: #ffffff;
+}
+
+.onboarding__content {
+    display: flex;
+    width: min(100%, 920px);
+    margin: 0 auto;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+.onboarding__visual {
+    position: relative;
+    display: grid;
+    width: clamp(190px, 22vw, 220px);
+    aspect-ratio: 1;
+    place-items: center;
+    margin-bottom: clamp(22px, 3vh, 28px);
+}
+
+.onboarding__icon {
+    width: 62%;
+    height: 62%;
+}
+
+.onboarding__visual::after {
+    position: absolute;
+    bottom: 10%;
+    width: 54px;
+    height: 3px;
+    content: "";
+    background: #000000;
+    border-radius: 50%;
+    opacity: 0.12;
+    animation: icon-shadow 3s ease-in-out infinite;
+}
+
+.onboarding__visual--search .onboarding__icon {
+    animation: map-drop 3s ease-in-out infinite;
+}
+
+.onboarding__visual--route .onboarding__icon {
+    animation: route-follow 3.2s ease-in-out infinite;
+}
+
+.onboarding__visual--budget .onboarding__icon {
+    animation: cash-count 3s ease-in-out infinite;
+}
+
+.onboarding__visual--group .onboarding__icon {
+    animation: group-gather 2.8s ease-in-out infinite;
+}
+
+.onboarding__copy {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    flex-direction: column;
+}
+
+.onboarding__description {
+    min-height: 1.35em;
+    margin: 0;
+    overflow-wrap: normal;
+    font-size: clamp(30px, 3.3vw, 42px);
+    font-weight: 650;
+    line-break: strict;
+    line-height: 1.35;
+    letter-spacing: -0.045em;
+    text-wrap: balance;
+    word-break: keep-all;
+    animation: title-fade-in 360ms ease-out both;
+}
+
+.onboarding__progress {
+    display: flex;
+    height: 8px;
+    margin: clamp(24px, 4vh, 34px) 0;
+    align-items: center;
+    gap: 8px;
+}
+
+.onboarding__dot {
+    width: 6px;
+    height: 6px;
+    background: #cfcfcf;
+    border-radius: 999px;
+    transition:
+        width 180ms ease,
+        background-color 180ms ease;
+}
+
+.onboarding__dot--active {
+    width: 22px;
+    background: #000000;
+}
+
+.onboarding__next {
+    position: fixed;
+    z-index: 10;
+    right: var(--onboarding-gutter);
+    bottom: max(24px, env(safe-area-inset-bottom));
+    left: var(--onboarding-gutter);
+    display: flex;
+    width: auto;
+    max-width: 440px;
+    min-height: 60px;
+    margin: 0 auto;
+    padding: 0 20px;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    background: #000000;
+    border: 1px solid #000000;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 19px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.onboarding__next-arrow {
+    position: absolute;
+    right: 22px;
+}
+
+.onboarding__next:not(.onboarding__next--google):hover {
+    background: #222222;
+    border-color: #222222;
+}
+
+.onboarding__next--google {
+    color: #ffffff;
+    background: #202124;
+    border-color: #202124;
+    font-weight: 600;
+    transition:
+        background-color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.onboarding__next--google:hover {
+    background: #303134;
+    border-color: #303134;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 28%);
+}
+
+.onboarding__next--google:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.onboarding__google-logo-box {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    display: grid;
+    width: 50px;
+    place-items: center;
+    background: #ffffff;
+    border-radius: 3px;
+}
+
+.onboarding__google-logo {
+    width: 22px;
+    height: 22px;
+}
+
+.onboarding__auth-error {
+    position: fixed;
+    right: var(--onboarding-gutter);
+    bottom: max(94px, calc(env(safe-area-inset-bottom) + 70px));
+    left: var(--onboarding-gutter);
+    max-width: 440px;
+    margin: 0 auto;
+    color: #b3261e;
+    font-size: 14px;
+    font-weight: 550;
+    line-height: 1.45;
+    text-align: center;
+    word-break: keep-all;
+}
+
+.onboarding__next:focus-visible {
+    outline: 3px solid #000000;
+    outline-offset: 4px;
+}
+
+@keyframes map-drop {
+    0%,
+    100% {
+        transform: translateY(2px) scale(1);
+    }
+
+    40% {
+        transform: translateY(-9px) scale(1.03);
+    }
+
+    58% {
+        transform: translateY(3px) scale(0.99);
+    }
+}
+
+@keyframes route-follow {
+    0%,
+    100% {
+        transform: translateX(-7px) rotate(-2deg);
+    }
+
+    50% {
+        transform: translateX(7px) rotate(2deg);
+    }
+}
+
+@keyframes group-gather {
+    0%,
+    100% {
+        transform: scale(0.96);
+    }
+
+    50% {
+        transform: scale(1.06);
+    }
+}
+
+@keyframes cash-count {
+    0%,
+    100% {
+        transform: translateY(2px) rotate(-3deg);
+    }
+
+    42% {
+        transform: translateY(-7px) rotate(4deg);
+    }
+
+    62% {
+        transform: translateY(-2px) rotate(-1deg);
+    }
+}
+
+@keyframes icon-shadow {
+    0%,
+    100% {
+        transform: scaleX(1);
+        opacity: 0.12;
+    }
+
+    50% {
+        transform: scaleX(0.7);
+        opacity: 0.06;
+    }
+}
+
+@keyframes title-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-height: 680px) {
+    .onboarding__visual {
+        width: clamp(132px, 28vh, 190px);
+        margin-bottom: clamp(12px, 3vh, 24px);
+    }
+
+    .onboarding__progress {
+        margin: clamp(16px, 4vh, 22px) 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .onboarding__icon,
+    .onboarding__description {
+        animation: none !important;
+    }
+
+    .onboarding__visual::after {
+        animation: none;
+    }
+
+    .onboarding__dot {
+        transition: none;
+    }
+}
