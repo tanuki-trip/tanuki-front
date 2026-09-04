@@ -9,6 +9,11 @@ import { RootPage } from ".";
 
 const initialAuthState = useAuthStore.getState();
 const mockToday = new Date(2026, 8, 4);
+const initialWindowInnerWidth = window.innerWidth;
+const initialDocumentClientWidth = Object.getOwnPropertyDescriptor(
+    document.documentElement,
+    "clientWidth",
+);
 
 function renderRootPage() {
     return render(
@@ -35,6 +40,21 @@ beforeEach(() => {
 afterEach(() => {
     useTripStore.setState({ trips: initialTrips });
     useAuthStore.setState(initialAuthState, true);
+    Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: initialWindowInnerWidth,
+    });
+    if (initialDocumentClientWidth) {
+        Object.defineProperty(
+            document.documentElement,
+            "clientWidth",
+            initialDocumentClientWidth,
+        );
+    } else {
+        Reflect.deleteProperty(document.documentElement, "clientWidth");
+    }
+    document.body.style.overflow = "";
+    document.body.style.paddingRight = "";
 });
 
 describe("RootPage", () => {
@@ -205,6 +225,38 @@ describe("RootPage", () => {
 
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
         expect(menuButton).toHaveFocus();
+    });
+
+    it("preserves the page width while a dialog locks scrolling", async () => {
+        const user = userEvent.setup();
+        Object.defineProperty(window, "innerWidth", {
+            configurable: true,
+            value: 1200,
+        });
+        Object.defineProperty(document.documentElement, "clientWidth", {
+            configurable: true,
+            value: 1185,
+        });
+        renderRootPage();
+
+        await user.click(
+            screen.getByRole("button", {
+                name: "도쿄 4박 5일 메뉴 열기",
+            }),
+        );
+        await user.click(
+            within(
+                screen.getByRole("menu", { name: "도쿄 4박 5일 관리" }),
+            ).getByRole("menuitem", { name: "이름 수정" }),
+        );
+
+        expect(document.body.style.overflow).toBe("hidden");
+        expect(document.body.style.paddingRight).toBe("15px");
+
+        await user.click(screen.getByRole("button", { name: "닫기" }));
+
+        expect(document.body.style.overflow).toBe("");
+        expect(document.body.style.paddingRight).toBe("");
     });
 
     it("shows the empty state after deleting every trip", async () => {

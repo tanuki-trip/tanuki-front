@@ -26,6 +26,9 @@ export function TripDialog({
 
     useEffect(() => {
         const previousOverflow = document.body.style.overflow;
+        const previousPaddingRight = document.body.style.paddingRight;
+        const documentWidth = document.documentElement.clientWidth;
+        const scrollbarWidth = window.innerWidth - documentWidth;
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
                 onClose();
@@ -60,11 +63,22 @@ export function TripDialog({
             }
         };
 
+        if (documentWidth > 0 && scrollbarWidth > 0) {
+            const bodyPaddingRight = Number.parseFloat(
+                window.getComputedStyle(document.body).paddingRight,
+            );
+            document.body.style.paddingRight = `${
+                (Number.isNaN(bodyPaddingRight) ? 0 : bodyPaddingRight) +
+                scrollbarWidth
+            }px`;
+        }
+
         document.body.style.overflow = "hidden";
         document.addEventListener("keydown", handleKeyDown);
 
         return () => {
             document.body.style.overflow = previousOverflow;
+            document.body.style.paddingRight = previousPaddingRight;
             document.removeEventListener("keydown", handleKeyDown);
         };
     }, [onClose]);
