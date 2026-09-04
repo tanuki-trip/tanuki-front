@@ -61,7 +61,9 @@ describe("CreateTripPage", () => {
             name: "국가 검색",
         });
 
-        expect(screen.getAllByRole("radio")).toHaveLength(3);
+        expect(screen.getAllByRole("radio")).toHaveLength(5);
+        expect(screen.getByRole("radio", { name: /태국/ })).toBeVisible();
+        expect(screen.getByRole("radio", { name: /미국/ })).toBeVisible();
 
         await user.type(searchInput, "viet");
 

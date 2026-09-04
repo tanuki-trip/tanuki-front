@@ -20,6 +20,20 @@ export const supportedCountries = [
         currencyCode: "CNY",
         currencyName: "위안",
     },
+    {
+        code: "TH",
+        name: "태국",
+        englishName: "Thailand",
+        currencyCode: "THB",
+        currencyName: "바트",
+    },
+    {
+        code: "US",
+        name: "미국",
+        englishName: "United States",
+        currencyCode: "USD",
+        currencyName: "달러",
+    },
 ] as const;
 
 export type Country = (typeof supportedCountries)[number];

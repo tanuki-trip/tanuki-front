@@ -1,5 +1,7 @@
 import ChinaFlag from "country-flag-icons/react/3x2/CN";
 import JapanFlag from "country-flag-icons/react/3x2/JP";
+import ThailandFlag from "country-flag-icons/react/3x2/TH";
+import UnitedStatesFlag from "country-flag-icons/react/3x2/US";
 import VietnamFlag from "country-flag-icons/react/3x2/VN";
 
 import type { CountryCode } from "../trips/countries";
@@ -12,6 +14,8 @@ type CountryFlagProps = {
 const countryFlags = {
     CN: ChinaFlag,
     JP: JapanFlag,
+    TH: ThailandFlag,
+    US: UnitedStatesFlag,
     VN: VietnamFlag,
 };
 

@@ -1,11 +1,15 @@
 import chinaCover from "../../assets/trip-covers/china.webp";
 import japanCover from "../../assets/trip-covers/japan.webp";
+import thailandCover from "../../assets/trip-covers/thailand.webp";
+import usaCover from "../../assets/trip-covers/usa.webp";
 import vietnamCover from "../../assets/trip-covers/vietnam.webp";
 import type { CountryCode } from "../../trips/countries";
 
 const tripCoverByCountry: Record<CountryCode, string> = {
     CN: chinaCover,
     JP: japanCover,
+    TH: thailandCover,
+    US: usaCover,
     VN: vietnamCover,
 };
 
