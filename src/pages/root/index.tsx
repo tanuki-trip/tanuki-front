@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Plus } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { useTripStore, type Trip } from "../../trips/store";
 import { TripCard } from "./components/TripCard";
@@ -96,10 +97,10 @@ export function RootPage() {
                 )}
             </div>
 
-            <button className={styles.addButton} type="button">
+            <Link className={styles.addButton} to="/trips/new">
                 <Plus aria-hidden="true" strokeWidth={2} />
                 여행 추가하기
-            </button>
+            </Link>
 
             {dialogState && selectedTrip ? (
                 <TripDialog

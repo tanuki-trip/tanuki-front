@@ -1,12 +1,17 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { initialTrips, useTripStore } from "../../trips/store";
 import { RootPage } from ".";
 
 function renderRootPage() {
-    return render(<RootPage />);
+    return render(
+        <MemoryRouter>
+            <RootPage />
+        </MemoryRouter>,
+    );
 }
 
 afterEach(() => {
@@ -40,8 +45,8 @@ describe("RootPage", () => {
             screen.queryByText("아직 생성된 여행이 없습니다."),
         ).not.toBeInTheDocument();
         expect(
-            screen.getByRole("button", { name: "여행 추가하기" }),
-        ).toBeEnabled();
+            screen.getByRole("link", { name: "여행 추가하기" }),
+        ).toHaveAttribute("href", "/trips/new");
 
         const tokyoCard = within(tripList).getByRole("article", {
             name: "도쿄 4박 5일",

@@ -26,6 +26,39 @@ describe("AppRouter", () => {
         ).toBeInTheDocument();
     });
 
+    it("renders the trip wizard for authenticated users", () => {
+        useAuthStore.setState({
+            status: "authenticated",
+            user: {
+                id: "user-1",
+                displayName: "테스트 사용자",
+                email: "test@example.com",
+                photoUrl: null,
+            },
+        });
+        window.history.replaceState({}, "", "/trips/new");
+
+        render(<AppRouter />);
+
+        expect(
+            screen.getByRole("heading", { name: "어디로 떠나나요?" }),
+        ).toBeInTheDocument();
+    });
+
+    it("redirects guests away from the trip wizard", () => {
+        useAuthStore.setState({ status: "guest", user: null });
+        window.history.replaceState({}, "", "/trips/new");
+
+        render(<AppRouter />);
+
+        expect(
+            screen.getByRole("heading", {
+                name: "가고 싶은 곳을 지도에서 찾아보세요.",
+            }),
+        ).toBeInTheDocument();
+        expect(window.location.pathname).toBe("/");
+    });
+
     it.each(["/login", "/missing"])("renders 404 at %s", (path) => {
         window.history.replaceState({}, "", path);
 
