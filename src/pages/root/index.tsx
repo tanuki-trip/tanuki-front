@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
 import { Plus } from "lucide-react";
 
+import { useTripStore, type Trip } from "../../trips/store";
 import { TripCard } from "./components/TripCard";
 import { TripDialog, type TripDialogView } from "./components/TripDialog";
-import { mockTrips, type Trip } from "./trip";
 import styles from "./style.module.css";
 
 type DialogState = {
@@ -12,7 +12,9 @@ type DialogState = {
 };
 
 export function RootPage() {
-    const [trips, setTrips] = useState(mockTrips);
+    const trips = useTripStore((state) => state.trips);
+    const renameTrip = useTripStore((state) => state.renameTrip);
+    const removeTrip = useTripStore((state) => state.removeTrip);
     const [dialogState, setDialogState] = useState<DialogState | null>(null);
     const dialogTriggerRef = useRef<HTMLButtonElement | null>(null);
     const pageTitleRef = useRef<HTMLHeadingElement | null>(null);
@@ -47,11 +49,7 @@ export function RootPage() {
             return;
         }
 
-        setTrips((currentTrips) =>
-            currentTrips.map((trip) =>
-                trip.id === selectedTrip.id ? { ...trip, name } : trip,
-            ),
-        );
+        renameTrip(selectedTrip.id, name);
         closeDialog();
     };
 
@@ -60,9 +58,7 @@ export function RootPage() {
             return;
         }
 
-        setTrips((currentTrips) =>
-            currentTrips.filter((trip) => trip.id !== selectedTrip.id),
-        );
+        removeTrip(selectedTrip.id);
         setDialogState(null);
         pageTitleRef.current?.focus();
     };

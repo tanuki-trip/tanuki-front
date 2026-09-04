@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 
-import type { Trip } from "../trip";
+import type { Trip } from "../../../trips/store";
 import styles from "./TripDialog.module.css";
 
 export type TripDialogView = "edit" | "delete";

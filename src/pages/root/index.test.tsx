@@ -1,12 +1,21 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
+import { initialTrips, useTripStore } from "../../trips/store";
 import { RootPage } from ".";
+
+function renderRootPage() {
+    return render(<RootPage />);
+}
+
+afterEach(() => {
+    useTripStore.setState({ trips: initialTrips });
+});
 
 describe("RootPage", () => {
     it("shows the mock trips", () => {
-        const { container } = render(<RootPage />);
+        const { container } = renderRootPage();
 
         expect(
             screen.getByRole("heading", { name: "여행 리스트" }),
@@ -50,7 +59,7 @@ describe("RootPage", () => {
 
     it("edits a trip from the trip menu", async () => {
         const user = userEvent.setup();
-        render(<RootPage />);
+        renderRootPage();
 
         await user.click(
             screen.getByRole("button", {
@@ -79,7 +88,7 @@ describe("RootPage", () => {
 
     it("deletes a trip after confirmation", async () => {
         const user = userEvent.setup();
-        render(<RootPage />);
+        renderRootPage();
 
         await user.click(
             screen.getByRole("button", {
@@ -111,7 +120,7 @@ describe("RootPage", () => {
 
     it("closes the trip menu from outside or with Escape", async () => {
         const user = userEvent.setup();
-        render(<RootPage />);
+        renderRootPage();
 
         const menuButton = screen.getByRole("button", {
             name: "도쿄 4박 5일 메뉴 열기",
@@ -134,7 +143,7 @@ describe("RootPage", () => {
 
     it("restores focus after closing a dialog from the backdrop", async () => {
         const user = userEvent.setup();
-        render(<RootPage />);
+        renderRootPage();
 
         const menuButton = screen.getByRole("button", {
             name: "도쿄 4박 5일 메뉴 열기",
@@ -160,7 +169,7 @@ describe("RootPage", () => {
 
     it("shows the empty state after deleting every trip", async () => {
         const user = userEvent.setup();
-        render(<RootPage />);
+        renderRootPage();
 
         for (const tripName of [
             "도쿄 4박 5일",

@@ -6,12 +6,12 @@ import {
 } from "react";
 import { CalendarDays, EllipsisVertical, Pencil, Trash2 } from "lucide-react";
 
-import { CountryFlag } from "./CountryFlag";
+import { CountryFlag } from "../../../components/CountryFlag";
+import type { Trip } from "../../../trips/store";
 import {
     formatCompactEndDate,
     formatCompactStartDate,
     getTripCover,
-    type Trip,
 } from "../trip";
 import styles from "./TripCard.module.css";
 
@@ -190,13 +190,17 @@ export function TripCard({
                             <time dateTime={trip.startDate}>
                                 {formatCompactStartDate(trip.startDate)}
                             </time>
-                            <span aria-hidden="true">–</span>
-                            <time dateTime={trip.endDate}>
-                                {formatCompactEndDate(
-                                    trip.startDate,
-                                    trip.endDate,
-                                )}
-                            </time>
+                            {trip.startDate !== trip.endDate ? (
+                                <>
+                                    <span aria-hidden="true">–</span>
+                                    <time dateTime={trip.endDate}>
+                                        {formatCompactEndDate(
+                                            trip.startDate,
+                                            trip.endDate,
+                                        )}
+                                    </time>
+                                </>
+                            ) : null}
                         </span>
                         <span
                             className={styles.detailSeparator}
@@ -204,7 +208,7 @@ export function TripCard({
                         >
                             ·
                         </span>
-                        <span>{trip.memberCount}명</span>
+                        <span>{trip.members.length}명</span>
                     </p>
                 </div>
             </div>

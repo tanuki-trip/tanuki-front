@@ -2,7 +2,7 @@ import ChinaFlag from "country-flag-icons/react/3x2/CN";
 import JapanFlag from "country-flag-icons/react/3x2/JP";
 import VietnamFlag from "country-flag-icons/react/3x2/VN";
 
-export type CountryCode = "JP" | "CN" | "VN";
+import type { CountryCode } from "../trips/countries";
 
 type CountryFlagProps = {
     code: CountryCode;
