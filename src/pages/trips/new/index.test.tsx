@@ -47,6 +47,14 @@ function setupUser() {
     return userEvent.setup();
 }
 
+async function enterTripNameAndContinue(
+    user: ReturnType<typeof setupUser>,
+    name = "테스트 여행",
+) {
+    await user.type(screen.getByRole("textbox", { name: "여행 이름" }), name);
+    await user.click(screen.getByRole("button", { name: "다음" }));
+}
+
 afterEach(() => {
     useAuthStore.setState(initialAuthState, true);
     useTripStore.setState({ trips: initialTrips });
@@ -56,6 +64,8 @@ describe("CreateTripPage", () => {
     it("filters the country list by Korean or English name", async () => {
         const user = setupUser();
         renderCreateTripPage();
+
+        await enterTripNameAndContinue(user);
 
         const searchInput = screen.getByRole("searchbox", {
             name: "국가 검색",
@@ -93,6 +103,19 @@ describe("CreateTripPage", () => {
         renderCreateTripPage();
 
         const nextButton = screen.getByRole("button", { name: "다음" });
+        expect(nextButton).toBeDisabled();
+        const nameInput = screen.getByRole("textbox", {
+            name: "여행 이름",
+        });
+        await user.type(nameInput, "   ");
+        expect(nextButton).toBeDisabled();
+        await user.clear(nameInput);
+        await user.type(nameInput, "  후쿠오카 미식 여행  ");
+        await user.click(nextButton);
+
+        expect(
+            screen.getByRole("heading", { name: "어디로 떠나나요?" }),
+        ).toHaveFocus();
         expect(nextButton).toBeDisabled();
 
         await user.click(screen.getByRole("radio", { name: /일본/ }));
@@ -174,7 +197,7 @@ describe("CreateTripPage", () => {
         expect(
             screen.getByRole("heading", { name: "여행 준비가 끝났어요" }),
         ).toBeInTheDocument();
-        expect(screen.getByText("일본 여행")).toBeInTheDocument();
+        expect(screen.getByText("후쿠오카 미식 여행")).toBeInTheDocument();
         expect(screen.getByText("2명")).toBeInTheDocument();
         expect(screen.getByText("후쿠오카 공항")).toBeInTheDocument();
         expect(screen.getByText("하카타항")).toBeInTheDocument();
@@ -185,7 +208,7 @@ describe("CreateTripPage", () => {
         const createdTrip = useTripStore.getState().trips[0];
 
         expect(createdTrip).toMatchObject({
-            name: "일본 여행",
+            name: "후쿠오카 미식 여행",
             countryCode: "JP",
             currencyCode: "JPY",
             startDate: toTripDateString(rangeStart),
@@ -203,6 +226,7 @@ describe("CreateTripPage", () => {
         const user = setupUser();
         renderCreateTripPage();
 
+        await enterTripNameAndContinue(user, "다낭 당일치기");
         await user.click(screen.getByRole("radio", { name: /베트남/ }));
         await user.click(screen.getByRole("button", { name: "다음" }));
         await user.click(
@@ -242,6 +266,7 @@ describe("CreateTripPage", () => {
         const user = setupUser();
         renderCreateTripPage();
 
+        await enterTripNameAndContinue(user, "제주 드라이브");
         await user.click(screen.getByRole("radio", { name: /한국/ }));
         await user.click(screen.getByRole("button", { name: "다음" }));
         await user.click(
@@ -293,6 +318,7 @@ describe("CreateTripPage", () => {
         const user = setupUser();
         renderCreateTripPage();
 
+        await enterTripNameAndContinue(user, "상하이 야경 여행");
         await user.click(screen.getByRole("radio", { name: /중국/ }));
         await user.click(screen.getByRole("button", { name: "다음" }));
         await user.click(
@@ -303,6 +329,11 @@ describe("CreateTripPage", () => {
         await user.click(screen.getByRole("button", { name: "이전" }));
 
         expect(screen.getByRole("radio", { name: /중국/ })).toBeChecked();
+        await user.click(screen.getByRole("button", { name: "이전" }));
+        expect(screen.getByRole("textbox", { name: "여행 이름" })).toHaveValue(
+            "상하이 야경 여행",
+        );
+        await user.click(screen.getByRole("button", { name: "다음" }));
         await user.click(screen.getByRole("button", { name: "다음" }));
         expect(
             screen.getByText(

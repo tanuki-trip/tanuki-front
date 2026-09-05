@@ -14,6 +14,7 @@ import { CountryStep } from "./components/CountryStep";
 import { DateStep } from "./components/DateStep";
 import { DestinationHubStep } from "./components/DestinationHubStep";
 import { MembersStep, type Companion } from "./components/MembersStep";
+import { NameStep } from "./components/NameStep";
 import { ReturnTripStep } from "./components/ReturnTripStep";
 import { ReviewStep } from "./components/ReviewStep";
 import { TransportStep } from "./components/TransportStep";
@@ -21,13 +22,14 @@ import { getTripDayCount } from "./trip-form";
 import styles from "./style.module.css";
 
 const TRIP_STEP = {
-    country: 0,
-    dates: 1,
-    members: 2,
-    transport: 3,
-    destinationHub: 4,
-    returnTrip: 5,
-    review: 6,
+    name: 0,
+    country: 1,
+    dates: 2,
+    members: 3,
+    transport: 4,
+    destinationHub: 5,
+    returnTrip: 6,
+    review: 7,
 } as const;
 
 const LAST_STEP = TRIP_STEP.review;
@@ -38,7 +40,8 @@ export function CreateTripPage() {
     const addTrip = useTripStore((state) => state.addTrip);
     const displayName = useAuthStore((state) => state.user?.displayName);
     const ownerName = displayName?.trim() || "나";
-    const [step, setStep] = useState(0);
+    const [step, setStep] = useState<number>(TRIP_STEP.name);
+    const [tripName, setTripName] = useState("");
     const [countryCode, setCountryCode] = useState<CountryCode | null>(null);
     const [dates, setDates] = useState({ startDate: "", endDate: "" });
     const [isDayTrip, setIsDayTrip] = useState(false);
@@ -53,6 +56,7 @@ export function CreateTripPage() {
     const [usesDifferentReturn, setUsesDifferentReturn] = useState(false);
     const nextCompanionId = useRef(0);
     const stepTitleRef = useRef<HTMLHeadingElement | null>(null);
+    const trimmedTripName = tripName.trim();
     const { startDate, endDate } = dates;
     const dayCount = getTripDayCount(startDate, endDate);
     const hasCompleteDates =
@@ -86,6 +90,7 @@ export function CreateTripPage() {
     }, [step]);
 
     const canContinue =
+        (step === TRIP_STEP.name && trimmedTripName.length > 0) ||
         (step === TRIP_STEP.country && countryCode !== null) ||
         (step === TRIP_STEP.dates && hasCompleteDates) ||
         step === TRIP_STEP.members ||
@@ -152,6 +157,7 @@ export function CreateTripPage() {
     const completeTrip = () => {
         if (
             !selectedCountry ||
+            !trimmedTripName ||
             !startDate ||
             !endDate ||
             !hasCompleteDates ||
@@ -162,7 +168,7 @@ export function CreateTripPage() {
         }
 
         addTrip({
-            name: `${selectedCountry.name} 여행`,
+            name: trimmedTripName,
             country: selectedCountry.name,
             countryCode: selectedCountry.code,
             currencyCode: selectedCountry.currencyCode,
@@ -235,6 +241,13 @@ export function CreateTripPage() {
             </header>
 
             <div className={styles.content} key={step}>
+                {step === TRIP_STEP.name ? (
+                    <NameStep
+                        name={tripName}
+                        headingRef={stepTitleRef}
+                        onChange={setTripName}
+                    />
+                ) : null}
                 {step === TRIP_STEP.country ? (
                     <CountryStep
                         countryCode={countryCode}
@@ -314,6 +327,7 @@ export function CreateTripPage() {
                 dayCount !== null &&
                 transportType ? (
                     <ReviewStep
+                        tripName={trimmedTripName}
                         country={selectedCountry}
                         startDate={startDate}
                         endDate={endDate}

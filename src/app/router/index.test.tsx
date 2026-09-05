@@ -42,7 +42,9 @@ describe("AppRouter", () => {
         render(<AppRouter />);
 
         expect(
-            screen.getByRole("heading", { name: "어디로 떠나나요?" }),
+            screen.getByRole("heading", {
+                name: "여행 이름을 정해주세요",
+            }),
         ).toBeInTheDocument();
     });
 

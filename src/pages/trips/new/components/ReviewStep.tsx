@@ -9,6 +9,7 @@ import { StepHeader, type StepHeadingRef } from "./StepHeader";
 import styles from "./style.module.css";
 
 type ReviewStepProps = {
+    tripName: string;
     country: Country;
     startDate: string;
     endDate: string;
@@ -22,6 +23,7 @@ type ReviewStepProps = {
 };
 
 export function ReviewStep({
+    tripName,
     country,
     startDate,
     endDate,
@@ -48,7 +50,7 @@ export function ReviewStep({
             <dl className={styles.reviewList}>
                 <div>
                     <dt>여행 이름</dt>
-                    <dd>{country.name} 여행</dd>
+                    <dd>{tripName}</dd>
                 </div>
                 <div>
                     <dt>국가·통화</dt>

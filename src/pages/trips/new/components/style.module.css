@@ -19,6 +19,15 @@
     word-break: keep-all;
 }
 
+.nameStepContent {
+    margin-top: 36px;
+}
+
+.nameStepContent .field input:focus-visible {
+    border: 2px solid #5267e5;
+    outline: 0;
+}
+
 .choiceFieldset {
     min-width: 0;
     margin: 36px 0 0;
@@ -878,6 +887,10 @@
     }
 
     .choiceFieldset {
+        margin-top: 28px;
+    }
+
+    .nameStepContent {
         margin-top: 28px;
     }
 
