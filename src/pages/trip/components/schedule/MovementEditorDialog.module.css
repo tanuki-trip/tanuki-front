@@ -1,0 +1,260 @@
+.dialog {
+    width: min(360px, calc(100% - 32px));
+    max-height: calc(100dvh - 32px);
+    padding: 0;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 8px;
+    box-shadow: 0 16px 48px rgb(0 0 0 / 22%);
+}
+
+.dialog::backdrop {
+    background: rgb(0 0 0 / 36%);
+}
+
+.form {
+    display: grid;
+    padding: 18px;
+    gap: 16px;
+}
+
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.header h2,
+.header p,
+.helper {
+    margin: 0;
+}
+
+.header h2 {
+    font-size: 18px;
+    letter-spacing: -0.03em;
+}
+
+.header p {
+    margin-top: 3px;
+    color: #666666;
+    font-size: 11px;
+}
+
+.closeButton {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    flex: 0 0 32px;
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    place-items: center;
+}
+
+.closeButton:hover,
+.closeButton:focus-visible {
+    background: #f0f0f0;
+}
+
+.closeButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.field input {
+    width: 100%;
+    height: 42px;
+    padding: 0 11px;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #b9b9b9;
+    border-radius: 5px;
+    font: inherit;
+    font-weight: 600;
+}
+
+.field textarea {
+    width: 100%;
+    min-height: 112px;
+    padding: 10px 11px;
+    resize: vertical;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #b9b9b9;
+    border-radius: 5px;
+    font: inherit;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.field input:focus,
+.field textarea:focus {
+    border-color: #000000;
+    outline: 1px solid #000000;
+}
+
+.dayFieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.dayFieldset legend {
+    margin-bottom: 7px;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.dayOptions {
+    display: grid;
+    max-height: 210px;
+    padding: 4px;
+    overflow-y: auto;
+    border: 1px solid #b9b9b9;
+    border-radius: 5px;
+    gap: 2px;
+}
+
+.dayOption {
+    display: flex;
+    min-height: 36px;
+    padding: 7px 9px;
+    align-items: center;
+    gap: 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.dayOption input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.dayOption:hover,
+.dayOption:focus-within {
+    background: #eeeeee;
+}
+
+.dayOption.selectedDay {
+    color: #ffffff;
+    background: #000000;
+}
+
+.confirmText {
+    margin: 0;
+    color: #444444;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.field input:disabled {
+    color: #777777;
+    background: #f2f2f2;
+}
+
+.inputWithUnit {
+    position: relative;
+    display: block;
+}
+
+.inputWithUnit input {
+    padding-right: 36px;
+}
+
+.inputWithUnit > span {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    color: #666666;
+    font-size: 12px;
+    transform: translateY(-50%);
+}
+
+.helper {
+    margin-top: -10px;
+    color: #777777;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.checkbox {
+    display: flex;
+    width: fit-content;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.checkbox input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #000000;
+}
+
+.checkbox:has(input:disabled) {
+    color: #888888;
+    cursor: default;
+}
+
+.actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.actions button {
+    min-height: 42px;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 5px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.actions .saveButton {
+    color: #ffffff;
+    background: #000000;
+}
+
+.actions .dangerButton {
+    color: #ffffff;
+    background: #b42318;
+    border-color: #b42318;
+}
+
+@media (max-width: 919px) {
+    .dialog {
+        width: 100%;
+        max-width: none;
+        max-height: min(78dvh, 620px);
+        margin: auto 0 0;
+        border-width: 1px 0 0;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .form {
+        padding-bottom: max(18px, env(safe-area-inset-bottom));
+    }
+}

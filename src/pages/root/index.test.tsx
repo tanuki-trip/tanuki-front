@@ -86,15 +86,28 @@ describe("RootPage", () => {
         expect(screen.getAllByRole("article")).toHaveLength(3);
 
         for (const trip of [
-            { name: "도쿄 4박 5일", country: "일본" },
-            { name: "상하이 주말 여행", country: "중국" },
-            { name: "다낭 가족 여행", country: "베트남" },
+            { id: "japan-tokyo", name: "도쿄 4박 5일", country: "일본" },
+            {
+                id: "china-shanghai",
+                name: "상하이 주말 여행",
+                country: "중국",
+            },
+            {
+                id: "vietnam-danang",
+                name: "다낭 가족 여행",
+                country: "베트남",
+            },
         ]) {
             const card = screen.getByRole("article", {
                 name: trip.name,
             });
 
             expect(within(card).getByText(trip.country)).toBeInTheDocument();
+            expect(
+                within(card).getByRole("link", {
+                    name: `${trip.name} 여행 열기`,
+                }),
+            ).toHaveAttribute("href", `/trip/${trip.id}`);
         }
 
         expect(

@@ -1,0 +1,101 @@
+.scroller {
+    margin-right: -16px;
+    margin-left: -16px;
+    padding: 0 16px 8px;
+    flex: 0 0 auto;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    user-select: none;
+}
+
+.scroller::-webkit-scrollbar {
+    display: none;
+}
+
+.badges {
+    display: flex;
+    width: max-content;
+    gap: 6px;
+}
+
+.badge {
+    display: flex;
+    min-width: 76px;
+    min-height: 48px;
+    padding: 6px 9px;
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 6px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.badge strong {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.badge time,
+.badge > span:last-child {
+    color: #666666;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.badge:hover {
+    background: #f2f2f2;
+}
+
+.badge:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 2px;
+}
+
+.activeBadge,
+.activeBadge:hover {
+    color: #ffffff;
+    background: #000000;
+}
+
+.activeBadge time,
+.activeBadge > span:last-child {
+    color: #ffffff;
+}
+
+.bookmarkLabel {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.bookmarkLabel svg {
+    width: 12px;
+    height: 12px;
+}
+
+.invalid {
+    margin: 0;
+    color: #666666;
+    font-size: 13px;
+}
+
+@media (pointer: fine) {
+    .scroller,
+    .badge {
+        cursor: grab;
+    }
+
+    .scroller[data-dragging="true"],
+    .scroller[data-dragging="true"] .badge {
+        cursor: grabbing;
+    }
+}

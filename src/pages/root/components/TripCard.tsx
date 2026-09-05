@@ -5,6 +5,7 @@ import {
     type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { CalendarDays, EllipsisVertical, Pencil, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { CountryFlag } from "../../../components/CountryFlag";
 import type { Trip } from "../../../trips/store";
@@ -115,6 +116,12 @@ export function TripCard({
             className={`${styles.card} ${isFeatured ? styles.featured : ""}`}
             aria-labelledby={`${trip.id}-title`}
         >
+            <Link
+                className={styles.cardLink}
+                to={`/trip/${trip.id}`}
+                aria-label={`${trip.name} 여행 열기`}
+            />
+
             <div className={styles.cover}>
                 <img
                     className={styles.coverImage}

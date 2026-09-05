@@ -1,0 +1,115 @@
+.navigation {
+    position: fixed;
+    z-index: 20;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    min-height: 64px;
+    padding: 7px 8px max(7px, env(safe-area-inset-bottom));
+    align-items: center;
+    background: #ffffff;
+    border-top: 1px solid #d9d9d9;
+}
+
+.brandLink,
+.statusDot {
+    display: none;
+}
+
+.items {
+    display: grid;
+    width: min(100%, 520px);
+    margin: 0 auto;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.item {
+    display: grid;
+    min-width: 44px;
+    min-height: 50px;
+    padding: 0;
+    place-items: center;
+    color: #000000;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.item svg {
+    width: 21px;
+    height: 21px;
+}
+
+.item:hover {
+    background: #f2f2f2;
+}
+
+.item:focus-visible,
+.brandLink:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 2px;
+}
+
+.activeItem,
+.activeItem:hover {
+    color: #ffffff;
+    background: #000000;
+}
+
+@media (min-width: 920px) {
+    .navigation {
+        top: 0;
+        right: auto;
+        width: 72px;
+        min-height: 100dvh;
+        padding: 14px 10px;
+        flex-direction: column;
+        justify-content: space-between;
+        border-top: 0;
+        border-right: 1px solid #d9d9d9;
+    }
+
+    .brandLink {
+        display: grid;
+        width: 48px;
+        height: 48px;
+        place-items: center;
+        color: #000000;
+        border-radius: 6px;
+    }
+
+    .brandLink:hover {
+        background: #f2f2f2;
+    }
+
+    .brandLink svg {
+        width: 25px;
+        height: 25px;
+    }
+
+    .items {
+        width: auto;
+        margin: 0;
+        grid-template-columns: 48px;
+        gap: 9px;
+    }
+
+    .item {
+        width: 48px;
+        height: 48px;
+        min-height: 48px;
+    }
+
+    .statusDot {
+        display: block;
+        width: 6px;
+        height: 6px;
+        background: #000000;
+        border-radius: 50%;
+    }
+}
