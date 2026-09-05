@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { createMockTripPlaces, type TripInbound } from "../../places/mock";
+import { getTripPlacesForDay, type TripInbound } from "../../places/model";
 import { reorderDayPlaces } from "../../places/reorder";
 import {
     deleteTripPlace,
@@ -10,6 +10,7 @@ import {
     type ScheduleDay,
     type TripPlaceDetailsPatch,
 } from "../../places/schedule";
+import { createTripEndpointPlaces } from "../../places/trip-endpoints";
 import { useTripStore, type Trip } from "../../trips/store";
 import { NotFoundPage } from "../not-found";
 import { TripContentPanel } from "./components/TripContentPanel";
@@ -46,29 +47,25 @@ export function TripPage() {
 function TripWorkspace({ trip }: { trip: Trip }) {
     const [activeTab, setActiveTab] = useState<TripTab>("schedule");
     const [activeDay, setActiveDay] = useState<TripDayKey>(1);
-    const [mapFocus, setMapFocus] = useState<{
-        placeId: string;
-        request: number;
-    } | null>(null);
     const tripDays = useMemo(
         () => getTripDays(trip.startDate, trip.endDate),
         [trip.endDate, trip.startDate],
     );
     const [places, setPlaces] = useState(() =>
-        createMockTripPlaces({
-            countryCode: trip.countryCode,
-            currencyCode: trip.currencyCode,
-            dayCount: tripDays.length,
-            tripId: trip.id,
-        }),
+        createTripEndpointPlaces(trip, tripDays.length),
     );
     const activePlaces = useMemo(
-        () =>
-            places
-                .filter((place) => place.day === activeDay)
-                .sort((left, right) => (left.order ?? 0) - (right.order ?? 0)),
+        () => getTripPlacesForDay(places, activeDay),
         [activeDay, places],
     );
+    const [mapFocus, setMapFocus] = useState<{
+        placeId: string;
+        request: number;
+    } | null>(() => {
+        const firstPlace = activePlaces[0];
+
+        return firstPlace ? { placeId: firstPlace.id, request: 1 } : null;
+    });
 
     function handleDayChange(day: TripDayKey) {
         setActiveDay(day);

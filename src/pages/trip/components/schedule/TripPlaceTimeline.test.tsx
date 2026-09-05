@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import type { TripPlace } from "../../../../places/mock";
+import type { TripPlace } from "../../../../places/model";
 import { TripPlaceTimeline } from "./TripPlaceTimeline";
 import styles from "./TripPlaceTimeline.module.css";
 
@@ -23,6 +23,7 @@ const places: TripPlace[] = [
             cost: null,
             isPassCovered: false,
         },
+        fixedPosition: null,
     },
     {
         id: "place-2",
@@ -40,10 +41,47 @@ const places: TripPlace[] = [
             cost: { amount: 180, currency: "JPY" },
             isPassCovered: false,
         },
+        fixedPosition: null,
     },
 ];
 
 describe("TripPlaceTimeline", () => {
+    it("marks an endpoint as fixed and removes its move and delete actions", async () => {
+        const user = userEvent.setup();
+        const fixedPlace: TripPlace = {
+            ...places[0],
+            id: "arrival-airport",
+            name: "후쿠오카 공항",
+            fixedPosition: "first",
+        };
+
+        render(
+            <TripPlaceTimeline
+                activeDay={1}
+                dayCount={5}
+                onDeletePlace={vi.fn()}
+                onMovePlace={vi.fn()}
+                onReorder={vi.fn()}
+                onUpdateInbound={vi.fn()}
+                onUpdatePlace={vi.fn()}
+                places={[fixedPlace]}
+            />,
+        );
+
+        expect(screen.getByText("첫 일정으로 고정")).toBeVisible();
+        await user.click(
+            screen.getByRole("button", {
+                name: "후쿠오카 공항 일정 메뉴",
+            }),
+        );
+        expect(
+            screen.queryByRole("button", { name: "일정 이동" }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "일정 삭제" }),
+        ).not.toBeInTheDocument();
+    });
+
     it("renders the planned place fields and inbound segment", () => {
         render(
             <TripPlaceTimeline

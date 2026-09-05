@@ -82,8 +82,8 @@ describe("RootPage", () => {
         const tripList = screen.getByRole("list", {
             name: "다른 여행 목록",
         });
-        expect(within(tripList).getAllByRole("article")).toHaveLength(2);
-        expect(screen.getAllByRole("article")).toHaveLength(3);
+        expect(within(tripList).getAllByRole("article")).toHaveLength(3);
+        expect(screen.getAllByRole("article")).toHaveLength(4);
 
         for (const trip of [
             { id: "japan-tokyo", name: "도쿄 4박 5일", country: "일본" },
@@ -96,6 +96,11 @@ describe("RootPage", () => {
                 id: "vietnam-danang",
                 name: "다낭 가족 여행",
                 country: "베트남",
+            },
+            {
+                id: "korea-jeju",
+                name: "제주도 주말 여행",
+                country: "한국",
             },
         ]) {
             const card = screen.getByRole("article", {
@@ -126,7 +131,7 @@ describe("RootPage", () => {
         expect(within(tokyoCard).getByText("2명")).toBeInTheDocument();
         const coverImages =
             container.querySelectorAll<HTMLImageElement>('main img[alt=""]');
-        expect(coverImages).toHaveLength(3);
+        expect(coverImages).toHaveLength(4);
         expect(coverImages[0]).toHaveAttribute("loading", "eager");
         expect(coverImages[0]).toHaveAttribute("fetchpriority", "high");
         expect(coverImages[1]).toHaveAttribute("loading", "lazy");
@@ -186,7 +191,7 @@ describe("RootPage", () => {
         expect(
             screen.queryByRole("article", { name: "상하이 주말 여행" }),
         ).not.toBeInTheDocument();
-        expect(screen.getAllByRole("article")).toHaveLength(2);
+        expect(screen.getAllByRole("article")).toHaveLength(3);
     });
 
     it("closes the trip menu from outside or with Escape", async () => {
@@ -280,6 +285,7 @@ describe("RootPage", () => {
             "도쿄 4박 5일",
             "상하이 주말 여행",
             "다낭 가족 여행",
+            "제주도 주말 여행",
         ]) {
             await user.click(
                 screen.getByRole("button", {
@@ -368,7 +374,7 @@ describe("RootPage", () => {
             within(
                 screen.getByRole("list", { name: "여행 목록" }),
             ).getAllByRole("article"),
-        ).toHaveLength(3);
+        ).toHaveLength(4);
         expect(screen.queryByText(/^D-/)).not.toBeInTheDocument();
     });
 });

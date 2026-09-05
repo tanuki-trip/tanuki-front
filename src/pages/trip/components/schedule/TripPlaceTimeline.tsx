@@ -2,6 +2,7 @@ import {
     CalendarSync,
     Clock3,
     EllipsisVertical,
+    LockKeyhole,
     Pencil,
     StickyNote,
     Trash2,
@@ -15,7 +16,11 @@ import {
 } from "react";
 import type { MouseEvent, PointerEvent as ReactPointerEvent } from "react";
 
-import type { TripInbound, TripPlace } from "../../../../places/mock";
+import {
+    isFixedTripPlace,
+    type TripInbound,
+    type TripPlace,
+} from "../../../../places/model";
 import type {
     ScheduleDay,
     TripPlaceDetailsPatch,
@@ -108,9 +113,12 @@ function PlaceCard({
     onSelect: (event: MouseEvent<HTMLElement>, placeId: string) => void;
     place: TripPlace;
 }) {
+    const isFixed = place.fixedPosition !== null;
+
     return (
         <article
-            className={`${styles.card} ${isBookmark ? "" : styles.reorderableCard}`}
+            className={`${styles.card} ${!isBookmark && !isFixed ? styles.reorderableCard : ""} ${isFixed ? styles.fixedCard : ""}`}
+            data-fixed={isFixed ? "true" : undefined}
             data-place-id={place.id}
             data-selected={isSelected ? "true" : undefined}
             onClick={(event) => onSelect(event, place.id)}
@@ -143,6 +151,14 @@ function PlaceCard({
                         </button>
                     </h3>
                     <p className={styles.address}>{place.address}</p>
+                    {isFixed ? (
+                        <span className={styles.fixedLabel}>
+                            <LockKeyhole aria-hidden="true" />
+                            {place.fixedPosition === "first"
+                                ? "첫 일정으로 고정"
+                                : "마지막 일정으로 고정"}
+                        </span>
+                    ) : null}
                 </div>
                 <div className={styles.cardTools}>
                     {place.arrivalTime ? (
@@ -177,23 +193,29 @@ function PlaceCard({
                                 <StickyNote aria-hidden="true" />
                                 메모 수정
                             </button>
-                            <button
-                                type="button"
-                                onClick={(event) => onMenuAction(event, "move")}
-                            >
-                                <CalendarSync aria-hidden="true" />
-                                일정 이동
-                            </button>
-                            <button
-                                className={styles.dangerMenuItem}
-                                type="button"
-                                onClick={(event) =>
-                                    onMenuAction(event, "delete")
-                                }
-                            >
-                                <Trash2 aria-hidden="true" />
-                                일정 삭제
-                            </button>
+                            {isFixed ? null : (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={(event) =>
+                                            onMenuAction(event, "move")
+                                        }
+                                    >
+                                        <CalendarSync aria-hidden="true" />
+                                        일정 이동
+                                    </button>
+                                    <button
+                                        className={styles.dangerMenuItem}
+                                        type="button"
+                                        onClick={(event) =>
+                                            onMenuAction(event, "delete")
+                                        }
+                                    >
+                                        <Trash2 aria-hidden="true" />
+                                        일정 삭제
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </details>
                 </div>
@@ -247,7 +269,7 @@ function findCardAtPoint(
         ?.querySelectorAll<HTMLElement>("[data-place-id]");
 
     return Array.from(cards ?? []).find((card) => {
-        if (card === source) {
+        if (card === source || card.dataset.fixed === "true") {
             return false;
         }
 
@@ -477,12 +499,15 @@ export function TripPlaceTimeline({
         placeId: string,
     ) {
         const target = event.target as HTMLElement;
+        const place = places.find(({ id }) => id === placeId);
         const interactiveTarget = target.closest(
             "button, summary, input, textarea, select, a, label",
         );
 
         if (
             isBookmark ||
+            !place ||
+            isFixedTripPlace(place) ||
             pointerDragRef.current !== null ||
             !["mouse", "touch"].includes(event.pointerType) ||
             event.button !== 0 ||

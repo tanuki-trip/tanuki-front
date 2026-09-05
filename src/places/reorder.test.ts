@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import type { TripPlace } from "./mock";
+import type { TripPlace } from "./model";
 import { reorderDayPlaces } from "./reorder";
 
 function createPlace(
     id: string,
     order: number,
     arrivalTime: string,
+    fixedPosition: TripPlace["fixedPosition"] = null,
 ): TripPlace {
     return {
         id,
@@ -24,6 +25,7 @@ function createPlace(
             cost: null,
             isPassCovered: false,
         },
+        fixedPosition,
     };
 }
 
@@ -67,5 +69,15 @@ describe("reorderDayPlaces", () => {
         expect(reorderDayPlaces(places, "bookmark", "place-a", "place-b")).toBe(
             places,
         );
+    });
+
+    it("does not reorder a fixed endpoint", () => {
+        const places = [
+            createPlace("arrival", 0, "09:00", "first"),
+            createPlace("place-a", 1, "10:00"),
+        ];
+
+        expect(reorderDayPlaces(places, 1, "arrival", "place-a")).toBe(places);
+        expect(reorderDayPlaces(places, 1, "place-a", "arrival")).toBe(places);
     });
 });

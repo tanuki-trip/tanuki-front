@@ -1,5 +1,9 @@
 import type { Country } from "../../../../trips/countries";
-import type { TransportType } from "../../../../trips/store";
+import {
+    transportLabels,
+    type TransportType,
+} from "../../../../trips/transport";
+import type { TransportHub } from "../../../../trips/transport-hubs";
 import { formatCompactTripPeriod, formatTripDuration } from "../trip-form";
 import { StepHeader, type StepHeadingRef } from "./StepHeader";
 import styles from "./style.module.css";
@@ -11,7 +15,9 @@ type ReviewStepProps = {
     dayCount: number;
     memberCount: number;
     transportType: TransportType;
-    transportRef: string;
+    returnTransportType?: TransportType;
+    arrivalHub?: TransportHub;
+    departureHub?: TransportHub;
     headingRef: StepHeadingRef;
 };
 
@@ -22,9 +28,16 @@ export function ReviewStep({
     dayCount,
     memberCount,
     transportType,
-    transportRef,
+    returnTransportType,
+    arrivalHub,
+    departureHub,
     headingRef,
 }: ReviewStepProps) {
+    const hasDifferentReturn =
+        returnTransportType !== undefined &&
+        (returnTransportType !== transportType ||
+            arrivalHub?.id !== departureHub?.id);
+
     return (
         <section>
             <StepHeader
@@ -55,15 +68,41 @@ export function ReviewStep({
                     <dd>{memberCount}명</dd>
                 </div>
                 <div>
-                    <dt>교통수단</dt>
-                    <dd>
-                        {transportType === "flight" ? "비행기" : "배"}
-                        {transportRef.trim() ? (
-                            <span>{transportRef.trim()}</span>
-                        ) : null}
-                    </dd>
+                    <dt>가는 교통수단</dt>
+                    <dd>{transportLabels[transportType]}</dd>
                 </div>
+                {arrivalHub ? (
+                    <HubSummary label="여행지" hub={arrivalHub} />
+                ) : null}
+                {hasDifferentReturn ? (
+                    <>
+                        <div>
+                            <dt>돌아오는 교통수단</dt>
+                            <dd>{transportLabels[returnTransportType]}</dd>
+                        </div>
+                        {departureHub ? (
+                            <HubSummary
+                                label="귀국 출발지"
+                                hub={departureHub}
+                            />
+                        ) : null}
+                    </>
+                ) : null}
             </dl>
         </section>
+    );
+}
+
+function HubSummary({ label, hub }: { label: string; hub: TransportHub }) {
+    return (
+        <div>
+            <dt>
+                {label} {hub.kind === "airport" ? "공항" : "항구"}
+            </dt>
+            <dd>
+                {hub.name}
+                <span>{hub.code}</span>
+            </dd>
+        </div>
     );
 }

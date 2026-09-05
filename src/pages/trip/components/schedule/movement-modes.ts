@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import type { InboundMode } from "../../../../places/mock";
+import type { InboundMode } from "../../../../places/model";
 
 export type MovementModeOption = {
     icon: LucideIcon;

@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import type { TripPlace } from "./mock";
+import type { TripPlace } from "./model";
 import {
     deleteTripPlace,
     moveTripPlace,
     updateTripPlaceDetails,
 } from "./schedule";
 
-function createPlace(id: string, day: number, order: number): TripPlace {
+function createPlace(
+    id: string,
+    day: number,
+    order: number,
+    fixedPosition: TripPlace["fixedPosition"] = null,
+): TripPlace {
     return {
         id,
         name: id,
@@ -24,6 +29,7 @@ function createPlace(id: string, day: number, order: number): TripPlace {
             cost: null,
             isPassCovered: false,
         },
+        fixedPosition,
     };
 }
 
@@ -75,5 +81,32 @@ describe("trip place schedule actions", () => {
                 isPassCovered: false,
             },
         });
+    });
+
+    it("does not delete or move a fixed endpoint", () => {
+        const fixedPlace = createPlace("arrival", 1, 0, "first");
+        const places = [fixedPlace, createPlace("normal", 1, 1)];
+
+        expect(deleteTripPlace(places, fixedPlace.id)).toBe(places);
+        expect(moveTripPlace(places, fixedPlace.id, 2)).toBe(places);
+    });
+
+    it("inserts a moved place between fixed endpoints", () => {
+        const places = [
+            createPlace("moving", 1, 0),
+            createPlace("arrival", 2, 3, "first"),
+            createPlace("normal", 2, 0),
+            createPlace("departure", 2, 1, "last"),
+        ];
+        const result = moveTripPlace(places, "moving", 2)
+            .filter(({ day }) => day === 2)
+            .sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
+
+        expect(result.map(({ id }) => id)).toEqual([
+            "arrival",
+            "normal",
+            "moving",
+            "departure",
+        ]);
     });
 });

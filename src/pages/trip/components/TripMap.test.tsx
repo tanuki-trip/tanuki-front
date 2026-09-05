@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { TripPlace } from "../../../places/mock";
+import type { TripPlace } from "../../../places/model";
 import { TripMap } from "./TripMap";
 
 const mapMocks = vi.hoisted(() => ({
@@ -114,6 +114,7 @@ const places: TripPlace[] = [
             cost: null,
             isPassCovered: false,
         },
+        fixedPosition: null,
     },
     {
         id: "place-2",
@@ -131,6 +132,7 @@ const places: TripPlace[] = [
             cost: { amount: 180, currency: "JPY" },
             isPassCovered: false,
         },
+        fixedPosition: null,
     },
 ];
 
@@ -164,8 +166,8 @@ describe("TripMap", () => {
             <TripMap
                 countryCode="JP"
                 countryName="일본"
-                focusRequest={0}
-                focusedPlaceId={null}
+                focusRequest={1}
+                focusedPlaceId="place-1"
                 onPlaceSelect={onPlaceSelect}
                 places={unsortedPlaces}
             />,
@@ -213,6 +215,17 @@ describe("TripMap", () => {
             }),
             "place-labels",
         );
+        await waitFor(() => {
+            expect(mapMocks.easeTo).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    center: [139.7967, 35.7148],
+                    duration: 700,
+                    offset: [0, 0],
+                    zoom: 15,
+                }),
+            );
+            expect(firstMarker).toHaveAttribute("aria-pressed", "true");
+        });
 
         fireEvent.click(firstMarker);
         expect(onPlaceSelect).toHaveBeenCalledWith("place-1");
@@ -221,7 +234,7 @@ describe("TripMap", () => {
             <TripMap
                 countryCode="JP"
                 countryName="일본"
-                focusRequest={1}
+                focusRequest={2}
                 focusedPlaceId="place-2"
                 onPlaceSelect={onPlaceSelect}
                 places={unsortedPlaces}

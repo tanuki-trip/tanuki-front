@@ -1,6 +1,10 @@
 import { Plane, Ship } from "lucide-react";
 
-import type { TransportType } from "../../../../trips/store";
+import {
+    transportLabels,
+    type HubTransportType,
+    type TransportType,
+} from "../../../../trips/transport";
 import { StepHeader, type StepHeadingRef } from "./StepHeader";
 import styles from "./style.module.css";
 
@@ -19,7 +23,7 @@ export function TransportStep({
         <section>
             <StepHeader
                 title="어떻게 이동하나요?"
-                description="출국할 때 이용할 교통수단을 선택해주세요."
+                description="여행지까지 이용할 교통수단을 선택해주세요."
                 headingRef={headingRef}
             />
             <fieldset className={styles.choiceFieldset}>
@@ -27,27 +31,38 @@ export function TransportStep({
                 <div className={styles.transportGrid}>
                     <TransportOption
                         type="flight"
-                        label="비행기"
+                        label={transportLabels.flight}
                         selected={transportType === "flight"}
                         onSelect={onChange}
                     />
                     <TransportOption
                         type="ship"
-                        label="배"
+                        label={transportLabels.ship}
                         selected={transportType === "ship"}
                         onSelect={onChange}
                     />
                 </div>
+                <label className={styles.otherTransportOption}>
+                    <input
+                        className={styles.choiceInput}
+                        type="radio"
+                        name="transport"
+                        value="other"
+                        checked={transportType === "other"}
+                        onChange={() => onChange("other")}
+                    />
+                    {transportLabels.other}
+                </label>
             </fieldset>
         </section>
     );
 }
 
 type TransportOptionProps = {
-    type: TransportType;
+    type: HubTransportType;
     label: string;
     selected: boolean;
-    onSelect: (type: TransportType) => void;
+    onSelect: (type: HubTransportType) => void;
 };
 
 function TransportOption({

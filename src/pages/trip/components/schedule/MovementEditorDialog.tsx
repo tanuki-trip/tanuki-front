@@ -6,7 +6,7 @@ import type {
     InboundMode,
     TripInbound,
     TripPlace,
-} from "../../../../places/mock";
+} from "../../../../places/model";
 import { MovementModeSelect } from "./MovementModeSelect";
 import styles from "./MovementEditorDialog.module.css";
 

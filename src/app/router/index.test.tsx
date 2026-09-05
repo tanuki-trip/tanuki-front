@@ -106,8 +106,13 @@ describe("AppRouter", () => {
         expect(
             screen.getByRole("region", { name: "1일차 장소" }),
         ).toBeInTheDocument();
-        expect(screen.getAllByRole("article").length).toBeGreaterThanOrEqual(3);
-        expect(screen.getAllByRole("article").length).toBeLessThanOrEqual(5);
+        expect(screen.getAllByRole("article")).toHaveLength(1);
+        expect(screen.getByText("첫 일정으로 고정")).toBeVisible();
+        expect(
+            screen.getByRole("button", {
+                name: "지도에서 하네다 공항 보기",
+            }),
+        ).toHaveAttribute("aria-pressed", "true");
         expect(screen.getByRole("button", { name: "일정" })).toHaveAttribute(
             "aria-pressed",
             "true",
@@ -129,6 +134,7 @@ describe("AppRouter", () => {
         expect(
             screen.getByRole("region", { name: "3일차 장소" }),
         ).toBeInTheDocument();
+        expect(screen.getByText("등록된 장소가 없습니다.")).toBeVisible();
 
         await user.click(screen.getByRole("button", { name: "장소 검색" }));
 

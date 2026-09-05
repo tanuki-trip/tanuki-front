@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
@@ -61,7 +61,8 @@ describe("CreateTripPage", () => {
             name: "국가 검색",
         });
 
-        expect(screen.getAllByRole("radio")).toHaveLength(5);
+        expect(screen.getAllByRole("radio")).toHaveLength(6);
+        expect(screen.getByRole("radio", { name: /한국/ })).toBeVisible();
         expect(screen.getByRole("radio", { name: /태국/ })).toBeVisible();
         expect(screen.getByRole("radio", { name: /미국/ })).toBeVisible();
 
@@ -129,7 +130,45 @@ describe("CreateTripPage", () => {
         await user.click(screen.getByRole("radio", { name: "비행기" }));
         await user.click(screen.getByRole("button", { name: "다음" }));
 
-        await user.type(screen.getByLabelText("편명 또는 예약번호"), "KE703");
+        const detailsNextButton = screen.getByRole("button", { name: "다음" });
+
+        expect(detailsNextButton).toBeDisabled();
+        expect(
+            screen.getByRole("heading", {
+                name: "여행지 공항을 선택해주세요",
+            }),
+        ).toBeInTheDocument();
+        const destinationSearch = screen.getByRole("searchbox", {
+            name: "여행지 지역",
+        });
+        expect(
+            screen.getByRole("radiogroup", { name: "일본 공항 선택" }),
+        ).toBeInTheDocument();
+        await user.type(destinationSearch, "후쿠오카");
+        await user.click(screen.getByRole("radio", { name: /후쿠오카 공항/ }));
+        await user.click(
+            screen.getByRole("checkbox", { name: "돌아오는 편이 달라요" }),
+        );
+        await user.click(detailsNextButton);
+
+        expect(
+            screen.getByRole("heading", {
+                name: "어디에서 돌아오나요?",
+            }),
+        ).toBeInTheDocument();
+        expect(detailsNextButton).toBeDisabled();
+        await user.click(
+            within(
+                screen.getByRole("group", {
+                    name: "집으로 돌아오는 교통수단",
+                }),
+            ).getByRole("radio", { name: "배" }),
+        );
+        await user.type(
+            screen.getByRole("searchbox", { name: "출발지 지역" }),
+            "후쿠오카",
+        );
+        await user.click(screen.getByRole("radio", { name: /하카타항/ }));
         await user.click(screen.getByRole("button", { name: "다음" }));
 
         expect(
@@ -137,6 +176,8 @@ describe("CreateTripPage", () => {
         ).toBeInTheDocument();
         expect(screen.getByText("일본 여행")).toBeInTheDocument();
         expect(screen.getByText("2명")).toBeInTheDocument();
+        expect(screen.getByText("후쿠오카 공항")).toBeInTheDocument();
+        expect(screen.getByText("하카타항")).toBeInTheDocument();
 
         await user.click(screen.getByRole("button", { name: "여행 만들기" }));
 
@@ -150,7 +191,9 @@ describe("CreateTripPage", () => {
             startDate: toTripDateString(rangeStart),
             endDate: toTripDateString(rangeEnd),
             transportType: "flight",
-            transportRef: "KE703",
+            returnTransportType: "ship",
+            arrivalHub: { id: "jp-fuk" },
+            departureHub: { id: "jp-hakata-port" },
             members: [{ name: "서윤" }, { name: "민지" }],
         });
         expect(createdTrip).not.toHaveProperty("memberNames");
@@ -175,6 +218,11 @@ describe("CreateTripPage", () => {
         await user.click(screen.getByRole("button", { name: "다음" }));
         await user.click(screen.getByRole("radio", { name: "배" }));
         await user.click(screen.getByRole("button", { name: "다음" }));
+        await user.type(
+            screen.getByRole("searchbox", { name: "여행지 지역" }),
+            "다낭",
+        );
+        await user.click(screen.getByRole("radio", { name: /다낭항/ }));
         await user.click(screen.getByRole("button", { name: "다음" }));
         await user.click(screen.getByRole("button", { name: "여행 만들기" }));
 
@@ -183,9 +231,62 @@ describe("CreateTripPage", () => {
             startDate: toTripDateString(dayTripDate),
             endDate: toTripDateString(dayTripDate),
             transportType: "ship",
+            returnTransportType: "ship",
+            arrivalHub: { id: "vn-danang-port" },
+            departureHub: { id: "vn-danang-port" },
             members: [{ name: "나" }],
         });
-        expect(useTripStore.getState().trips[0].transportRef).toBeUndefined();
+    });
+
+    it("skips transport details when other transport is selected", async () => {
+        const user = setupUser();
+        renderCreateTripPage();
+
+        await user.click(screen.getByRole("radio", { name: /한국/ }));
+        await user.click(screen.getByRole("button", { name: "다음" }));
+        await user.click(
+            screen.getByRole("checkbox", { name: "당일치기예요" }),
+        );
+        await user.click(
+            screen.getByRole("button", {
+                name: getDayButtonName(dayTripDate),
+            }),
+        );
+        await user.click(screen.getByRole("button", { name: "다음" }));
+        await user.click(screen.getByRole("button", { name: "다음" }));
+
+        await user.click(screen.getByRole("radio", { name: "비행기" }));
+        await user.click(screen.getByRole("button", { name: "다음" }));
+        await user.click(screen.getByRole("button", { name: "이전" }));
+        await user.click(screen.getByRole("radio", { name: "기타" }));
+        await user.click(screen.getByRole("button", { name: "다음" }));
+
+        expect(
+            screen.getByRole("heading", { name: "여행 준비가 끝났어요" }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole("heading", {
+                name: "여행지 공항을 선택해주세요",
+            }),
+        ).not.toBeInTheDocument();
+        expect(screen.getByText("기타")).toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", { name: "이전" }));
+        expect(
+            screen.getByRole("heading", { name: "어떻게 이동하나요?" }),
+        ).toBeInTheDocument();
+        expect(screen.getByRole("radio", { name: "기타" })).toBeChecked();
+
+        await user.click(screen.getByRole("button", { name: "다음" }));
+        await user.click(screen.getByRole("button", { name: "여행 만들기" }));
+
+        expect(useTripStore.getState().trips[0]).toMatchObject({
+            countryCode: "KR",
+            transportType: "other",
+        });
+        expect(
+            useTripStore.getState().trips[0].returnTransportType,
+        ).toBeUndefined();
     });
 
     it("keeps the draft when going back and discards it when cancelled", async () => {

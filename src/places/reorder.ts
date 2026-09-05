@@ -1,4 +1,9 @@
-import type { TripPlace } from "./mock";
+import {
+    createEmptyTripInbound,
+    getTripPlacesForDay,
+    isFixedTripPlace,
+    type TripPlace,
+} from "./model";
 
 export function reorderDayPlaces(
     places: TripPlace[],
@@ -10,13 +15,20 @@ export function reorderDayPlaces(
         return places;
     }
 
-    const dayPlaces = places
-        .filter((place) => place.day === day)
-        .sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
+    const dayPlaces = getTripPlacesForDay(places, day);
     const sourceIndex = dayPlaces.findIndex((place) => place.id === sourceId);
     const targetIndex = dayPlaces.findIndex((place) => place.id === targetId);
+    const sourcePlace = dayPlaces[sourceIndex];
+    const targetPlace = dayPlaces[targetIndex];
 
-    if (sourceIndex === -1 || targetIndex === -1) {
+    if (
+        sourceIndex === -1 ||
+        targetIndex === -1 ||
+        !sourcePlace ||
+        !targetPlace ||
+        isFixedTripPlace(sourcePlace) ||
+        isFixedTripPlace(targetPlace)
+    ) {
         return places;
     }
 
@@ -38,12 +50,8 @@ export function reorderDayPlaces(
             place.id,
             {
                 arrivalTime: scheduleSlots[index]?.arrivalTime ?? null,
-                inbound: scheduleSlots[index]?.inbound ?? {
-                    mode: null,
-                    durationMin: null,
-                    cost: null,
-                    isPassCovered: false,
-                },
+                inbound:
+                    scheduleSlots[index]?.inbound ?? createEmptyTripInbound(),
                 order: index,
             },
         ]),

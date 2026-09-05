@@ -1,4 +1,4 @@
-import type { TripPlace } from "../../../places/mock";
+import { compareTripPlaceOrder, type TripPlace } from "../../../places/model";
 import type { CountryCode } from "../../../trips/countries";
 
 type CountryView = {
@@ -13,6 +13,7 @@ export const routeCasingLayerId = "trip-place-route-casing";
 export const routeLayerId = "trip-place-route-line";
 
 export const countryViews: Record<CountryCode, CountryView> = {
+    KR: { center: [127.8, 36.3], zoom: 5.4 },
     JP: { center: [138.1, 36.2], zoom: 4.8 },
     VN: { center: [108.2, 16.1], zoom: 4.7 },
     CN: { center: [104.2, 35.9], zoom: 3.4 },
@@ -23,7 +24,7 @@ export const countryViews: Record<CountryCode, CountryView> = {
 export function createRouteData(places: TripPlace[]) {
     const coordinates = places
         .filter((place) => place.order !== null)
-        .sort((left, right) => (left.order ?? 0) - (right.order ?? 0))
+        .sort(compareTripPlaceOrder)
         .map((place) => [
             place.coordinates.longitude,
             place.coordinates.latitude,

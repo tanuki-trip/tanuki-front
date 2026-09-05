@@ -2,7 +2,7 @@ import { X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
-import type { TripPlace } from "../../../../places/mock";
+import type { TripPlace } from "../../../../places/model";
 import type {
     ScheduleDay,
     TripPlaceDetailsPatch,

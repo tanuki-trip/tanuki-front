@@ -1,8 +1,8 @@
 import { create } from "zustand";
 
 import type { CountryCode } from "./countries";
-
-export type TransportType = "flight" | "ship";
+import { getTransportHub, type TransportHub } from "./transport-hubs";
+import type { TransportType } from "./transport";
 
 export type TripMember = {
     id: string;
@@ -19,7 +19,9 @@ export type Trip = {
     endDate: string;
     members: TripMember[];
     transportType: TransportType;
-    transportRef?: string;
+    returnTransportType?: TransportType;
+    arrivalHub?: TransportHub;
+    departureHub?: TransportHub;
 };
 
 export type NewTrip = Omit<Trip, "id" | "members"> & {
@@ -51,6 +53,9 @@ export const initialTrips: Trip[] = [
             { id: "japan-member-1", name: "민지" },
         ],
         transportType: "flight",
+        returnTransportType: "flight",
+        arrivalHub: getTransportHub("jp-hnd"),
+        departureHub: getTransportHub("jp-hnd"),
     },
     {
         id: "china-shanghai",
@@ -67,6 +72,9 @@ export const initialTrips: Trip[] = [
             { id: "china-member-3", name: "현수" },
         ],
         transportType: "flight",
+        returnTransportType: "flight",
+        arrivalHub: getTransportHub("cn-pvg"),
+        departureHub: getTransportHub("cn-pvg"),
     },
     {
         id: "vietnam-danang",
@@ -82,6 +90,26 @@ export const initialTrips: Trip[] = [
             { id: "vietnam-member-2", name: "아빠" },
         ],
         transportType: "flight",
+        returnTransportType: "flight",
+        arrivalHub: getTransportHub("vn-dad"),
+        departureHub: getTransportHub("vn-dad"),
+    },
+    {
+        id: "korea-jeju",
+        name: "제주도 주말 여행",
+        country: "한국",
+        countryCode: "KR",
+        currencyCode: "KRW",
+        startDate: "2027-03-06",
+        endDate: "2027-03-08",
+        members: [
+            { id: "korea-member-owner", name: "나" },
+            { id: "korea-member-1", name: "소연" },
+        ],
+        transportType: "flight",
+        returnTransportType: "flight",
+        arrivalHub: getTransportHub("kr-cju"),
+        departureHub: getTransportHub("kr-cju"),
     },
 ];
 

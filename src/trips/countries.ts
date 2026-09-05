@@ -1,5 +1,12 @@
 export const supportedCountries = [
     {
+        code: "KR",
+        name: "한국",
+        englishName: "South Korea",
+        currencyCode: "KRW",
+        currencyName: "원",
+    },
+    {
         code: "JP",
         name: "일본",
         englishName: "Japan",

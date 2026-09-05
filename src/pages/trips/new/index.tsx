@@ -4,11 +4,17 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useAuthStore } from "../../../auth/store";
 import { getCountry, type CountryCode } from "../../../trips/countries";
-import { useTripStore, type TransportType } from "../../../trips/store";
+import { useTripStore } from "../../../trips/store";
+import {
+    isHubTransportType,
+    type TransportType,
+} from "../../../trips/transport";
+import { findTransportHub } from "../../../trips/transport-hubs";
 import { CountryStep } from "./components/CountryStep";
 import { DateStep } from "./components/DateStep";
+import { DestinationHubStep } from "./components/DestinationHubStep";
 import { MembersStep, type Companion } from "./components/MembersStep";
-import { ReservationStep } from "./components/ReservationStep";
+import { ReturnTripStep } from "./components/ReturnTripStep";
 import { ReviewStep } from "./components/ReviewStep";
 import { TransportStep } from "./components/TransportStep";
 import { getTripDayCount } from "./trip-form";
@@ -19,8 +25,9 @@ const TRIP_STEP = {
     dates: 1,
     members: 2,
     transport: 3,
-    reservation: 4,
-    review: 5,
+    destinationHub: 4,
+    returnTrip: 5,
+    review: 6,
 } as const;
 
 const LAST_STEP = TRIP_STEP.review;
@@ -39,7 +46,11 @@ export function CreateTripPage() {
     const [transportType, setTransportType] = useState<TransportType | null>(
         null,
     );
-    const [transportRef, setTransportRef] = useState("");
+    const [arrivalHubId, setArrivalHubId] = useState<string | null>(null);
+    const [departureHubId, setDepartureHubId] = useState<string | null>(null);
+    const [returnTransportType, setReturnTransportType] =
+        useState<TransportType | null>(null);
+    const [usesDifferentReturn, setUsesDifferentReturn] = useState(false);
     const nextCompanionId = useRef(0);
     const stepTitleRef = useRef<HTMLHeadingElement | null>(null);
     const { startDate, endDate } = dates;
@@ -47,6 +58,28 @@ export function CreateTripPage() {
     const hasCompleteDates =
         dayCount !== null && (isDayTrip ? dayCount === 1 : dayCount >= 2);
     const selectedCountry = countryCode ? getCountry(countryCode) : null;
+    const arrivalHub =
+        countryCode && isHubTransportType(transportType)
+            ? findTransportHub(countryCode, transportType, arrivalHubId)
+            : undefined;
+    const resolvedReturnTransportType = usesDifferentReturn
+        ? returnTransportType
+        : transportType;
+    const departureHub = usesDifferentReturn
+        ? countryCode && isHubTransportType(resolvedReturnTransportType)
+            ? findTransportHub(
+                  countryCode,
+                  resolvedReturnTransportType,
+                  departureHubId,
+              )
+            : undefined
+        : arrivalHub;
+    const hasCompleteTransportDetails =
+        transportType === "other" ||
+        (arrivalHub !== undefined &&
+            resolvedReturnTransportType !== null &&
+            (!isHubTransportType(resolvedReturnTransportType) ||
+                departureHub !== undefined));
 
     useEffect(() => {
         stepTitleRef.current?.focus();
@@ -57,7 +90,12 @@ export function CreateTripPage() {
         (step === TRIP_STEP.dates && hasCompleteDates) ||
         step === TRIP_STEP.members ||
         (step === TRIP_STEP.transport && transportType !== null) ||
-        step >= TRIP_STEP.reservation;
+        (step === TRIP_STEP.destinationHub && arrivalHub !== undefined) ||
+        (step === TRIP_STEP.returnTrip &&
+            returnTransportType !== null &&
+            (!isHubTransportType(returnTransportType) ||
+                departureHub !== undefined)) ||
+        step === TRIP_STEP.review;
 
     const addCompanion = (name: string) => {
         setCompanions((currentCompanions) => [
@@ -73,13 +111,52 @@ export function CreateTripPage() {
         );
     };
 
+    const changeCountryCode = (nextCountryCode: CountryCode) => {
+        if (nextCountryCode !== countryCode) {
+            setArrivalHubId(null);
+            setDepartureHubId(null);
+            setReturnTransportType(null);
+            setUsesDifferentReturn(false);
+        }
+
+        setCountryCode(nextCountryCode);
+    };
+
+    const changeTransportType = (nextTransportType: TransportType) => {
+        if (nextTransportType !== transportType) {
+            setArrivalHubId(null);
+            setDepartureHubId(null);
+            setReturnTransportType(null);
+            setUsesDifferentReturn(false);
+        }
+
+        setTransportType(nextTransportType);
+    };
+
+    const changeReturnTransportType = (
+        nextReturnTransportType: TransportType,
+    ) => {
+        if (nextReturnTransportType !== returnTransportType) {
+            setDepartureHubId(null);
+        }
+
+        setReturnTransportType(nextReturnTransportType);
+    };
+
+    const changeDifferentReturn = (isDifferent: boolean) => {
+        setUsesDifferentReturn(isDifferent);
+        setDepartureHubId(null);
+        setReturnTransportType(isDifferent ? transportType : null);
+    };
+
     const completeTrip = () => {
         if (
             !selectedCountry ||
             !startDate ||
             !endDate ||
             !hasCompleteDates ||
-            !transportType
+            !transportType ||
+            !hasCompleteTransportDetails
         ) {
             return;
         }
@@ -93,7 +170,12 @@ export function CreateTripPage() {
             endDate,
             memberNames: [ownerName, ...companions.map(({ name }) => name)],
             transportType,
-            transportRef: transportRef.trim() || undefined,
+            returnTransportType:
+                transportType === "other"
+                    ? undefined
+                    : (resolvedReturnTransportType ?? undefined),
+            arrivalHub: transportType === "other" ? undefined : arrivalHub,
+            departureHub: transportType === "other" ? undefined : departureHub,
         });
         navigate("/");
     };
@@ -105,8 +187,22 @@ export function CreateTripPage() {
 
         if (step === LAST_STEP) {
             completeTrip();
+        } else if (step === TRIP_STEP.transport && transportType === "other") {
+            setStep(TRIP_STEP.review);
+        } else if (step === TRIP_STEP.destinationHub && !usesDifferentReturn) {
+            setStep(TRIP_STEP.review);
         } else {
             setStep((currentStep) => currentStep + 1);
+        }
+    };
+
+    const goBack = () => {
+        if (step === TRIP_STEP.review && transportType === "other") {
+            setStep(TRIP_STEP.transport);
+        } else if (step === TRIP_STEP.review && !usesDifferentReturn) {
+            setStep(TRIP_STEP.destinationHub);
+        } else {
+            setStep((currentStep) => currentStep - 1);
         }
     };
 
@@ -143,7 +239,7 @@ export function CreateTripPage() {
                     <CountryStep
                         countryCode={countryCode}
                         headingRef={stepTitleRef}
-                        onChange={setCountryCode}
+                        onChange={changeCountryCode}
                     />
                 ) : null}
                 {step === TRIP_STEP.dates ? (
@@ -183,15 +279,32 @@ export function CreateTripPage() {
                     <TransportStep
                         transportType={transportType}
                         headingRef={stepTitleRef}
-                        onChange={setTransportType}
+                        onChange={changeTransportType}
                     />
                 ) : null}
-                {step === TRIP_STEP.reservation && transportType ? (
-                    <ReservationStep
+                {step === TRIP_STEP.destinationHub &&
+                countryCode &&
+                isHubTransportType(transportType) ? (
+                    <DestinationHubStep
+                        countryCode={countryCode}
                         transportType={transportType}
-                        transportRef={transportRef}
+                        arrivalHubId={arrivalHubId}
+                        usesDifferentReturn={usesDifferentReturn}
                         headingRef={stepTitleRef}
-                        onChange={setTransportRef}
+                        onArrivalHubChange={setArrivalHubId}
+                        onDifferentReturnChange={changeDifferentReturn}
+                    />
+                ) : null}
+                {step === TRIP_STEP.returnTrip &&
+                countryCode &&
+                usesDifferentReturn ? (
+                    <ReturnTripStep
+                        countryCode={countryCode}
+                        transportType={returnTransportType}
+                        departureHubId={departureHubId}
+                        headingRef={stepTitleRef}
+                        onTransportTypeChange={changeReturnTransportType}
+                        onDepartureHubChange={setDepartureHubId}
                     />
                 ) : null}
                 {step === TRIP_STEP.review &&
@@ -207,7 +320,13 @@ export function CreateTripPage() {
                         dayCount={dayCount}
                         memberCount={companions.length + 1}
                         transportType={transportType}
-                        transportRef={transportRef}
+                        returnTransportType={
+                            transportType === "other"
+                                ? undefined
+                                : (resolvedReturnTransportType ?? undefined)
+                        }
+                        arrivalHub={arrivalHub}
+                        departureHub={departureHub}
                         headingRef={stepTitleRef}
                     />
                 ) : null}
@@ -219,9 +338,7 @@ export function CreateTripPage() {
                         <button
                             className={styles.backButton}
                             type="button"
-                            onClick={() =>
-                                setStep((currentStep) => currentStep - 1)
-                            }
+                            onClick={goBack}
                         >
                             <ArrowLeft aria-hidden="true" />
                             이전

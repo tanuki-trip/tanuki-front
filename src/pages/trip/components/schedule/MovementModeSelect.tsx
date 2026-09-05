@@ -2,7 +2,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import type { InboundMode } from "../../../../places/mock";
+import type { InboundMode } from "../../../../places/model";
 import { getMovementModeOption, movementModeOptions } from "./movement-modes";
 import styles from "./MovementModeSelect.module.css";
 

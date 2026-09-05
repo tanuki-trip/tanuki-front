@@ -1,24 +1,21 @@
-import type { TripPlace } from "./mock";
+import {
+    createEmptyTripInbound,
+    getTripPlacesForDay,
+    isFixedTripPlace,
+    type TripPlace,
+} from "./model";
 
-export type ScheduleDay = number | "bookmark";
+export type ScheduleDay = TripPlace["day"];
 export type TripPlaceDetailsPatch = Partial<
     Pick<TripPlace, "arrivalTime" | "memo">
 >;
 
-const emptyInbound = {
-    mode: null,
-    durationMin: null,
-    cost: null,
-    isPassCovered: false,
-} as const;
-
 function normalizeDayOrder(places: TripPlace[], day: ScheduleDay) {
     if (day === "bookmark") return places;
 
-    const orderedIds = places
-        .filter((place) => place.day === day)
-        .sort((left, right) => (left.order ?? 0) - (right.order ?? 0))
-        .map((place) => place.id);
+    const orderedIds = getTripPlacesForDay(places, day).map(
+        (place) => place.id,
+    );
     const orderById = new Map(
         orderedIds.map((placeId, index) => [placeId, index]),
     );
@@ -42,7 +39,7 @@ export function updateTripPlaceDetails(
 
 export function deleteTripPlace(places: TripPlace[], placeId: string) {
     const target = places.find((place) => place.id === placeId);
-    if (!target) return places;
+    if (!target || isFixedTripPlace(target)) return places;
 
     return normalizeDayOrder(
         places.filter((place) => place.id !== placeId),
@@ -56,7 +53,9 @@ export function moveTripPlace(
     targetDay: ScheduleDay,
 ) {
     const target = places.find((place) => place.id === placeId);
-    if (!target || target.day === targetDay) return places;
+    if (!target || isFixedTripPlace(target) || target.day === targetDay) {
+        return places;
+    }
 
     const normalized = normalizeDayOrder(
         places.filter((place) => place.id !== placeId),
@@ -70,8 +69,8 @@ export function moveTripPlace(
         day: targetDay,
         order: targetDay === "bookmark" ? null : nextOrder,
         arrivalTime: null,
-        inbound: emptyInbound,
+        inbound: createEmptyTripInbound(),
     };
 
-    return [...normalized, moved];
+    return normalizeDayOrder([...normalized, moved], targetDay);
 }

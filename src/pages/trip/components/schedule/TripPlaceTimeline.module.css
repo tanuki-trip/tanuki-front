@@ -111,6 +111,11 @@
     -webkit-touch-callout: none;
 }
 
+.fixedCard {
+    background: #fafbff;
+    border-color: #cbd1f4;
+}
+
 .card[data-dragging="true"] {
     z-index: 30;
     opacity: 0.94;
@@ -206,6 +211,21 @@
     line-height: 1.4;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.fixedLabel {
+    display: inline-flex;
+    margin-top: 7px;
+    align-items: center;
+    gap: 4px;
+    color: #5267e5;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.fixedLabel svg {
+    width: 11px;
+    height: 11px;
 }
 
 .cardTools {

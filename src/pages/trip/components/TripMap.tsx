@@ -6,7 +6,7 @@ import type {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-import type { TripPlace } from "../../../places/mock";
+import type { TripPlace } from "../../../places/model";
 import type { CountryCode } from "../../../trips/countries";
 import styles from "./TripMap.module.css";
 import {
