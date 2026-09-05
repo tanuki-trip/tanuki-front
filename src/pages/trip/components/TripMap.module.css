@@ -1,0 +1,148 @@
+.root,
+.map {
+    position: absolute;
+    inset: 0;
+}
+
+.root {
+    overflow: hidden;
+    background: #f1f1f1;
+}
+
+.marker {
+    display: flex;
+    width: 34px;
+    height: 38px;
+    padding: 0 2px 8px;
+    align-items: flex-start;
+    justify-content: center;
+    color: #ffffff;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+}
+
+.markerBadge {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    color: #ffffff;
+    background: #000000;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 28%);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    place-items: center;
+}
+
+.markerBadge::after {
+    position: absolute;
+    top: 23px;
+    left: 50%;
+    width: 9px;
+    height: 9px;
+    background: #000000;
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+    content: "";
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.marker:hover .markerBadge,
+.marker:focus-visible .markerBadge,
+.marker[data-selected="true"] .markerBadge {
+    color: #ffffff;
+    background: #000000;
+    border-color: #ffffff;
+    box-shadow:
+        0 0 0 2px #000000,
+        0 4px 14px rgb(0 0 0 / 42%);
+}
+
+.marker:hover .markerBadge::after,
+.marker:focus-visible .markerBadge::after,
+.marker[data-selected="true"] .markerBadge::after {
+    background: #000000;
+    border-color: #ffffff;
+}
+
+.marker[data-selected="true"] .markerBadge {
+    box-shadow:
+        0 0 0 2px #ffffff,
+        0 0 0 4px #000000,
+        0 5px 16px rgb(0 0 0 / 48%);
+}
+
+.marker:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 2px;
+}
+
+.map :global(.maplibregl-ctrl-bottom-left),
+.map :global(.maplibregl-ctrl-bottom-right) {
+    top: calc(12px + env(safe-area-inset-top));
+    bottom: auto;
+}
+
+.overlay {
+    position: absolute;
+    z-index: 5;
+    top: 33%;
+    left: 50%;
+    display: flex;
+    padding: 14px 18px;
+    align-items: center;
+    flex-direction: column;
+    gap: 4px;
+    color: #000000;
+    background: rgb(255 255 255 / 94%);
+    border: 1px solid #000000;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.error {
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.error p {
+    margin: 0;
+}
+
+.error button {
+    min-height: 44px;
+    padding: 0 16px;
+    color: #ffffff;
+    background: #000000;
+    border: 1px solid #000000;
+    border-radius: 6px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.error button:hover {
+    background: #222222;
+}
+
+.error button:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 3px;
+}
+
+@media (min-width: 920px) {
+    .map :global(.maplibregl-ctrl-bottom-left),
+    .map :global(.maplibregl-ctrl-bottom-right) {
+        top: auto;
+        bottom: 0;
+    }
+}

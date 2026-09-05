@@ -19,6 +19,7 @@
         "country-flag-icons": "^1.6.20",
         "firebase": "^12.18.0",
         "lucide-react": "^1.40.0",
+        "maplibre-gl": "^6.6.0",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
         "react-router-dom": "^7.18.3",
