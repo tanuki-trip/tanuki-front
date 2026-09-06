@@ -82,21 +82,11 @@ describe("RootPage", () => {
         const tripList = screen.getByRole("list", {
             name: "다른 여행 목록",
         });
-        expect(within(tripList).getAllByRole("article")).toHaveLength(3);
-        expect(screen.getAllByRole("article")).toHaveLength(4);
+        expect(within(tripList).getAllByRole("article")).toHaveLength(1);
+        expect(screen.getAllByRole("article")).toHaveLength(2);
 
         for (const trip of [
             { id: "japan-tokyo", name: "도쿄 4박 5일", country: "일본" },
-            {
-                id: "china-shanghai",
-                name: "상하이 주말 여행",
-                country: "중국",
-            },
-            {
-                id: "vietnam-danang",
-                name: "다낭 가족 여행",
-                country: "베트남",
-            },
             {
                 id: "korea-jeju",
                 name: "제주도 주말 여행",
@@ -131,7 +121,7 @@ describe("RootPage", () => {
         expect(within(tokyoCard).getByText("2명")).toBeInTheDocument();
         const coverImages =
             container.querySelectorAll<HTMLImageElement>('main img[alt=""]');
-        expect(coverImages).toHaveLength(4);
+        expect(coverImages).toHaveLength(2);
         expect(coverImages[0]).toHaveAttribute("loading", "eager");
         expect(coverImages[0]).toHaveAttribute("fetchpriority", "high");
         expect(coverImages[1]).toHaveAttribute("loading", "lazy");
@@ -172,12 +162,12 @@ describe("RootPage", () => {
 
         await user.click(
             screen.getByRole("button", {
-                name: "상하이 주말 여행 메뉴 열기",
+                name: "제주도 주말 여행 메뉴 열기",
             }),
         );
         await user.click(
             within(
-                screen.getByRole("menu", { name: "상하이 주말 여행 관리" }),
+                screen.getByRole("menu", { name: "제주도 주말 여행 관리" }),
             ).getByRole("menuitem", { name: "삭제" }),
         );
 
@@ -189,9 +179,9 @@ describe("RootPage", () => {
         );
 
         expect(
-            screen.queryByRole("article", { name: "상하이 주말 여행" }),
+            screen.queryByRole("article", { name: "제주도 주말 여행" }),
         ).not.toBeInTheDocument();
-        expect(screen.getAllByRole("article")).toHaveLength(3);
+        expect(screen.getAllByRole("article")).toHaveLength(1);
     });
 
     it("closes the trip menu from outside or with Escape", async () => {
@@ -281,12 +271,7 @@ describe("RootPage", () => {
         const user = userEvent.setup();
         renderRootPage();
 
-        for (const tripName of [
-            "도쿄 4박 5일",
-            "상하이 주말 여행",
-            "다낭 가족 여행",
-            "제주도 주말 여행",
-        ]) {
+        for (const tripName of ["도쿄 4박 5일", "제주도 주말 여행"]) {
             await user.click(
                 screen.getByRole("button", {
                     name: `${tripName} 메뉴 열기`,
@@ -374,7 +359,7 @@ describe("RootPage", () => {
             within(
                 screen.getByRole("list", { name: "여행 목록" }),
             ).getAllByRole("article"),
-        ).toHaveLength(4);
+        ).toHaveLength(2);
         expect(screen.queryByText(/^D-/)).not.toBeInTheDocument();
     });
 });

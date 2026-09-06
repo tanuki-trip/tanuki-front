@@ -109,7 +109,6 @@ function splitAddressAndPlace(query: string, countryCode: CountryCode) {
             /^(.+?(?:\d+(?:-\d+){1,}|\d+丁目\d+(?:番地?|番)\d*(?:号)?))[\s,，]+(.+)$/,
         ],
         KR: [/^(.+?(?:(?:대로|로|길)\s*)\d+(?:-\d+)?)[\s,，]+(.+)$/],
-        CN: [/^(.+?(?:路|街|道|巷|弄)\d+号)[\s,，]+(.+)$/],
     };
 
     for (const pattern of countryPatterns[countryCode] ?? []) {

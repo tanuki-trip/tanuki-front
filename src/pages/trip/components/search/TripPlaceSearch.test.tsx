@@ -80,8 +80,8 @@ describe("TripPlaceSearch", () => {
 
         render(
             <TripPlaceSearch
-                countryCode="VN"
-                countryName="베트남"
+                countryCode="KR"
+                countryName="한국"
                 onPlaceSelect={vi.fn()}
             />,
         );
@@ -97,6 +97,6 @@ describe("TripPlaceSearch", () => {
                 "‘없는 장소’의 정확한 검색 결과가 없어요. 건물명이나 가까운 명소로 검색해 보세요.",
             ),
         ).toBeInTheDocument();
-        expect(screen.getByText("검색 우선 지역 · 베트남")).toBeInTheDocument();
+        expect(screen.getByText("검색 우선 지역 · 한국")).toBeInTheDocument();
     });
 });

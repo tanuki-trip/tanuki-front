@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Check, Search } from "lucide-react";
+import { Check } from "lucide-react";
 
 import { CountryFlag } from "../../../../components/CountryFlag";
 import {
@@ -20,20 +19,6 @@ export function CountryStep({
     headingRef,
     onChange,
 }: CountryStepProps) {
-    const [query, setQuery] = useState("");
-    const normalizedQuery = query.trim().toLocaleLowerCase();
-    const filteredCountries = supportedCountries.filter((country) =>
-        [
-            country.name,
-            country.englishName,
-            country.code,
-            country.currencyCode,
-            country.currencyName,
-        ].some((keyword) =>
-            keyword.toLocaleLowerCase().includes(normalizedQuery),
-        ),
-    );
-
     return (
         <section>
             <StepHeader
@@ -43,55 +28,39 @@ export function CountryStep({
             />
             <fieldset className={styles.choiceFieldset}>
                 <legend className={styles.srOnly}>여행 국가</legend>
-                <label className={styles.countrySearch}>
-                    <Search aria-hidden="true" />
-                    <span className={styles.srOnly}>국가 검색</span>
-                    <input
-                        type="search"
-                        value={query}
-                        placeholder="국가 이름 검색"
-                        onChange={(event) => setQuery(event.target.value)}
-                    />
-                </label>
                 <div className={styles.countryList}>
-                    {filteredCountries.length > 0 ? (
-                        filteredCountries.map((country) => (
-                            <label
-                                className={styles.countryOption}
-                                key={country.code}
-                            >
-                                <input
-                                    className={styles.choiceInput}
-                                    type="radio"
-                                    name="country"
-                                    value={country.code}
-                                    checked={countryCode === country.code}
-                                    onChange={() => onChange(country.code)}
-                                />
-                                <CountryFlag
-                                    className={styles.flag}
-                                    code={country.code}
-                                />
-                                <span className={styles.countryText}>
-                                    <strong>{country.name}</strong>
-                                    <span>
-                                        {country.currencyCode} ·{" "}
-                                        {country.currencyName}
-                                    </span>
+                    {supportedCountries.map((country) => (
+                        <label
+                            className={styles.countryOption}
+                            key={country.code}
+                        >
+                            <input
+                                className={styles.choiceInput}
+                                type="radio"
+                                name="country"
+                                value={country.code}
+                                checked={countryCode === country.code}
+                                onChange={() => onChange(country.code)}
+                            />
+                            <CountryFlag
+                                className={styles.flag}
+                                code={country.code}
+                            />
+                            <span className={styles.countryText}>
+                                <strong>{country.name}</strong>
+                                <span>
+                                    {country.currencyCode} ·{" "}
+                                    {country.currencyName}
                                 </span>
-                                {countryCode === country.code ? (
-                                    <Check
-                                        className={styles.countryCheck}
-                                        aria-hidden="true"
-                                    />
-                                ) : null}
-                            </label>
-                        ))
-                    ) : (
-                        <p className={styles.emptySearch} role="status">
-                            검색 결과가 없습니다.
-                        </p>
-                    )}
+                            </span>
+                            {countryCode === country.code ? (
+                                <Check
+                                    className={styles.countryCheck}
+                                    aria-hidden="true"
+                                />
+                            ) : null}
+                        </label>
+                    ))}
                 </div>
             </fieldset>
         </section>

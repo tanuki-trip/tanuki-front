@@ -61,32 +61,18 @@ afterEach(() => {
 });
 
 describe("CreateTripPage", () => {
-    it("filters the country list by Korean or English name", async () => {
+    it("offers only Korea and Japan", async () => {
         const user = setupUser();
         renderCreateTripPage();
 
         await enterTripNameAndContinue(user);
 
-        const searchInput = screen.getByRole("searchbox", {
-            name: "국가 검색",
-        });
-
-        expect(screen.getAllByRole("radio")).toHaveLength(6);
+        expect(screen.getAllByRole("radio")).toHaveLength(2);
         expect(screen.getByRole("radio", { name: /한국/ })).toBeVisible();
-        expect(screen.getByRole("radio", { name: /태국/ })).toBeVisible();
-        expect(screen.getByRole("radio", { name: /미국/ })).toBeVisible();
-
-        await user.type(searchInput, "viet");
-
-        expect(screen.getByRole("radio", { name: /베트남/ })).toBeVisible();
+        expect(screen.getByRole("radio", { name: /일본/ })).toBeVisible();
         expect(
-            screen.queryByRole("radio", { name: /일본/ }),
+            screen.queryByRole("searchbox", { name: "국가 검색" }),
         ).not.toBeInTheDocument();
-
-        await user.clear(searchInput);
-        await user.type(searchInput, "없는 나라");
-
-        expect(screen.getByText("검색 결과가 없습니다.")).toBeVisible();
     });
 
     it("creates a trip from the step-by-step form", async () => {
@@ -226,8 +212,8 @@ describe("CreateTripPage", () => {
         const user = setupUser();
         renderCreateTripPage();
 
-        await enterTripNameAndContinue(user, "다낭 당일치기");
-        await user.click(screen.getByRole("radio", { name: /베트남/ }));
+        await enterTripNameAndContinue(user, "부산 당일치기");
+        await user.click(screen.getByRole("radio", { name: /한국/ }));
         await user.click(screen.getByRole("button", { name: "다음" }));
         await user.click(
             screen.getByRole("checkbox", { name: "당일치기예요" }),
@@ -244,20 +230,20 @@ describe("CreateTripPage", () => {
         await user.click(screen.getByRole("button", { name: "다음" }));
         await user.type(
             screen.getByRole("searchbox", { name: "여행지 지역" }),
-            "다낭",
+            "부산",
         );
-        await user.click(screen.getByRole("radio", { name: /다낭항/ }));
+        await user.click(screen.getByRole("radio", { name: /부산항/ }));
         await user.click(screen.getByRole("button", { name: "다음" }));
         await user.click(screen.getByRole("button", { name: "여행 만들기" }));
 
         expect(useTripStore.getState().trips[0]).toMatchObject({
-            countryCode: "VN",
+            countryCode: "KR",
             startDate: toTripDateString(dayTripDate),
             endDate: toTripDateString(dayTripDate),
             transportType: "ship",
             returnTransportType: "ship",
-            arrivalHub: { id: "vn-danang-port" },
-            departureHub: { id: "vn-danang-port" },
+            arrivalHub: { id: "kr-busan-port" },
+            departureHub: { id: "kr-busan-port" },
             members: [{ name: "나" }],
         });
     });
@@ -318,8 +304,8 @@ describe("CreateTripPage", () => {
         const user = setupUser();
         renderCreateTripPage();
 
-        await enterTripNameAndContinue(user, "상하이 야경 여행");
-        await user.click(screen.getByRole("radio", { name: /중국/ }));
+        await enterTripNameAndContinue(user, "오사카 야경 여행");
+        await user.click(screen.getByRole("radio", { name: /일본/ }));
         await user.click(screen.getByRole("button", { name: "다음" }));
         await user.click(
             screen.getByRole("button", {
@@ -328,10 +314,10 @@ describe("CreateTripPage", () => {
         );
         await user.click(screen.getByRole("button", { name: "이전" }));
 
-        expect(screen.getByRole("radio", { name: /중국/ })).toBeChecked();
+        expect(screen.getByRole("radio", { name: /일본/ })).toBeChecked();
         await user.click(screen.getByRole("button", { name: "이전" }));
         expect(screen.getByRole("textbox", { name: "여행 이름" })).toHaveValue(
-            "상하이 야경 여행",
+            "오사카 야경 여행",
         );
         await user.click(screen.getByRole("button", { name: "다음" }));
         await user.click(screen.getByRole("button", { name: "다음" }));

@@ -95,47 +95,7 @@
     border: 0;
 }
 
-.countrySearch {
-    position: relative;
-    display: block;
-}
-
-.countrySearch > svg {
-    position: absolute;
-    top: 50%;
-    left: 17px;
-    width: 20px;
-    height: 20px;
-    color: #777777;
-    transform: translateY(-50%);
-    pointer-events: none;
-}
-
-.countrySearch input {
-    width: 100%;
-    height: 56px;
-    padding: 0 48px;
-    color: #000000;
-    background: #ffffff;
-    border: 1px solid #cfcfcf;
-    border-radius: 12px;
-    font: inherit;
-    font-size: 16px;
-}
-
-.countrySearch input::placeholder {
-    color: #888888;
-}
-
-.countrySearch input:focus-visible {
-    border: 2px solid #5267e5;
-    outline: 0;
-}
-
 .countryList {
-    height: 260px;
-    margin-top: 12px;
-    overflow-y: auto;
     border: 1px solid #d9d9d9;
     border-radius: 14px;
 }
@@ -223,16 +183,6 @@
     width: 20px;
     height: 20px;
     color: #5267e5;
-}
-
-.emptySearch {
-    display: grid;
-    height: 100%;
-    margin: 0;
-    place-items: center;
-    color: #777777;
-    font-size: 15px;
-    text-align: center;
 }
 
 .field {

@@ -51,6 +51,6 @@ describe("transport hubs", () => {
     it("rejects a selected hub from another country or transport type", () => {
         expect(findTransportHub("JP", "flight", "jp-fuk")?.code).toBe("FUK");
         expect(findTransportHub("JP", "ship", "jp-fuk")).toBeUndefined();
-        expect(findTransportHub("VN", "flight", "jp-fuk")).toBeUndefined();
+        expect(findTransportHub("KR", "flight", "jp-fuk")).toBeUndefined();
     });
 });

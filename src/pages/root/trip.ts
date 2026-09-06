@@ -1,21 +1,13 @@
-import chinaCover from "../../assets/trip-covers/china.webp";
 import japanCover from "../../assets/trip-covers/japan.webp";
 import koreaCover from "../../assets/trip-covers/korea.webp";
-import thailandCover from "../../assets/trip-covers/thailand.webp";
-import usaCover from "../../assets/trip-covers/usa.webp";
-import vietnamCover from "../../assets/trip-covers/vietnam.webp";
 import type { CountryCode } from "../../trips/countries";
 import type { Trip } from "../../trips/store";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const tripCoverByCountry: Record<CountryCode, string> = {
-    CN: chinaCover,
     JP: japanCover,
     KR: koreaCover,
-    TH: thailandCover,
-    US: usaCover,
-    VN: vietnamCover,
 };
 
 export function getTripCover(countryCode: CountryCode) {
