@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 
 import { getTripPlacesForDay, type TripInbound } from "../../places/model";
 import { reorderDayPlaces } from "../../places/reorder";
+import type { PlaceSearchResult } from "../../places/search";
 import {
     deleteTripPlace,
     moveTripPlace,
@@ -16,6 +17,7 @@ import { NotFoundPage } from "../not-found";
 import { TripContentPanel } from "./components/TripContentPanel";
 import { TripMap } from "./components/TripMap";
 import { TripNavigation, type TripTab } from "./components/TripNavigation";
+import { TripPlaceSearch } from "./components/search/TripPlaceSearch";
 import {
     TripDayBadges,
     type TripDayKey,
@@ -54,18 +56,31 @@ function TripWorkspace({ trip }: { trip: Trip }) {
     const [places, setPlaces] = useState(() =>
         createTripEndpointPlaces(trip, tripDays.length),
     );
+    const searchHub = trip.arrivalHub ?? trip.departureHub;
     const activePlaces = useMemo(
         () => getTripPlacesForDay(places, activeDay),
         [activeDay, places],
     );
-    const [mapFocus, setMapFocus] = useState<{
-        placeId: string;
-        request: number;
-    } | null>(() => {
+    const [mapFocus, setMapFocus] = useState<
+        | { source: "schedule"; placeId: string; request: number }
+        | { source: "search"; place: PlaceSearchResult; request: number }
+        | null
+    >(() => {
         const firstPlace = activePlaces[0];
 
-        return firstPlace ? { placeId: firstPlace.id, request: 1 } : null;
+        return firstPlace
+            ? { source: "schedule", placeId: firstPlace.id, request: 1 }
+            : null;
     });
+
+    function handleTabChange(tab: TripTab) {
+        if (tab === activeTab) {
+            return;
+        }
+
+        setActiveTab(tab);
+        setMapFocus(null);
+    }
 
     function handleDayChange(day: TripDayKey) {
         setActiveDay(day);
@@ -74,9 +89,22 @@ function TripWorkspace({ trip }: { trip: Trip }) {
 
     function handlePlaceSelect(placeId: string) {
         setMapFocus((currentFocus) => ({
+            source: "schedule",
             placeId,
             request: (currentFocus?.request ?? 0) + 1,
         }));
+    }
+
+    function handleSearchPlaceSelect(place: PlaceSearchResult | null) {
+        setMapFocus((currentFocus) =>
+            place
+                ? {
+                      source: "search",
+                      place,
+                      request: (currentFocus?.request ?? 0) + 1,
+                  }
+                : null,
+        );
     }
 
     function handleReorder(sourceId: string, targetId: string) {
@@ -102,7 +130,10 @@ function TripWorkspace({ trip }: { trip: Trip }) {
     function handlePlaceDelete(placeId: string) {
         setPlaces((currentPlaces) => deleteTripPlace(currentPlaces, placeId));
         setMapFocus((currentFocus) =>
-            currentFocus?.placeId === placeId ? null : currentFocus,
+            currentFocus?.source === "schedule" &&
+            currentFocus.placeId === placeId
+                ? null
+                : currentFocus,
         );
     }
 
@@ -111,16 +142,22 @@ function TripWorkspace({ trip }: { trip: Trip }) {
             moveTripPlace(currentPlaces, placeId, day),
         );
         setMapFocus((currentFocus) =>
-            currentFocus?.placeId === placeId ? null : currentFocus,
+            currentFocus?.source === "schedule" &&
+            currentFocus.placeId === placeId
+                ? null
+                : currentFocus,
         );
     }
 
     return (
         <div className={styles.shell}>
-            <TripNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+            <TripNavigation
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+            />
             <TripContentPanel
                 title={panelTitles[activeTab]}
-                hideTitle={activeTab === "schedule"}
+                hideTitle={activeTab === "schedule" || activeTab === "search"}
             >
                 {activeTab === "schedule" ? (
                     <>
@@ -140,9 +177,27 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                             onUpdateInbound={handleInboundUpdate}
                             onUpdatePlace={handlePlaceUpdate}
                             places={activePlaces}
-                            selectedPlaceId={mapFocus?.placeId}
+                            selectedPlaceId={
+                                mapFocus?.source === "schedule"
+                                    ? mapFocus.placeId
+                                    : null
+                            }
                         />
                     </>
+                ) : null}
+                {activeTab === "search" ? (
+                    <TripPlaceSearch
+                        countryCode={trip.countryCode}
+                        countryName={trip.country}
+                        onPlaceSelect={handleSearchPlaceSelect}
+                        searchCenter={searchHub?.coordinates}
+                        searchRegion={searchHub?.region}
+                        selectedPlaceId={
+                            mapFocus?.source === "search"
+                                ? mapFocus.place.id
+                                : null
+                        }
+                    />
                 ) : null}
             </TripContentPanel>
             <main className={`${styles.page} ${styles.mapPage}`}>
@@ -151,9 +206,18 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                     countryCode={trip.countryCode}
                     countryName={trip.country}
                     focusRequest={mapFocus?.request ?? 0}
-                    focusedPlaceId={mapFocus?.placeId ?? null}
+                    focusedPlaceId={
+                        mapFocus?.source === "schedule"
+                            ? mapFocus.placeId
+                            : null
+                    }
                     onPlaceSelect={handlePlaceSelect}
                     places={activePlaces}
+                    searchPlace={
+                        activeTab === "search" && mapFocus?.source === "search"
+                            ? mapFocus.place
+                            : null
+                    }
                 />
             </main>
         </div>

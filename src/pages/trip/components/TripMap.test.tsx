@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { TripPlace } from "../../../places/model";
+import type { PlaceSearchResult } from "../../../places/search";
 import { TripMap } from "./TripMap";
 
 const mapMocks = vi.hoisted(() => ({
@@ -11,7 +12,7 @@ const mapMocks = vi.hoisted(() => ({
     container: null as HTMLElement | null,
     easeTo: vi.fn(),
     layerIds: new Set<string>(),
-    markerElements: [] as HTMLButtonElement[],
+    markerElements: [] as HTMLElement[],
     markerPositions: [] as [number, number][],
     remove: vi.fn(),
     routeSource: { setData: vi.fn() },
@@ -66,14 +67,19 @@ vi.mock("maplibre-gl", () => {
     }
 
     class MockMarker {
-        private readonly element: HTMLButtonElement;
+        private readonly element: HTMLElement;
+        private positioned = false;
 
-        constructor({ element }: { element: HTMLButtonElement }) {
+        constructor({ element }: { element: HTMLElement }) {
             this.element = element;
             mapMocks.markerElements.push(element);
         }
 
         addTo() {
+            if (!this.positioned) {
+                throw new Error("Marker needs a position before addTo");
+            }
+
             mapMocks.container?.append(this.element);
             return this;
         }
@@ -83,6 +89,7 @@ vi.mock("maplibre-gl", () => {
         }
 
         setLngLat(position: [number, number]) {
+            this.positioned = true;
             mapMocks.markerPositions.push(position);
             return this;
         }
@@ -135,6 +142,13 @@ const places: TripPlace[] = [
         fixedPosition: null,
     },
 ];
+
+const searchPlace: PlaceSearchResult = {
+    id: "way-173154847",
+    name: "검색한 센소지",
+    address: "다이토구, 도쿄도, 일본",
+    coordinates: { latitude: 35.7134, longitude: 139.7955 },
+};
 
 describe("TripMap", () => {
     beforeEach(() => {
@@ -280,6 +294,37 @@ describe("TripMap", () => {
                         type: "FeatureCollection",
                         features: [],
                     },
+                }),
+            );
+        });
+    });
+
+    it("renders a selected search result and moves the map to it", async () => {
+        render(
+            <TripMap
+                countryCode="JP"
+                countryName="일본"
+                focusRequest={1}
+                focusedPlaceId={null}
+                onPlaceSelect={vi.fn()}
+                places={places}
+                searchPlace={searchPlace}
+            />,
+        );
+
+        expect(
+            await screen.findByRole("img", {
+                name: "검색한 센소지 검색 위치",
+            }),
+        ).toBeInTheDocument();
+        expect(mapMocks.markerPositions).toContainEqual([139.7955, 35.7134]);
+
+        await waitFor(() => {
+            expect(mapMocks.easeTo).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    center: [139.7955, 35.7134],
+                    duration: 700,
+                    zoom: 15,
                 }),
             );
         });

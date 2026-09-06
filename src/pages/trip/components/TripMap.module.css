@@ -83,6 +83,19 @@
     outline-offset: 2px;
 }
 
+.searchMarker {
+    cursor: default;
+    pointer-events: none;
+}
+
+.searchMarker .markerBadge {
+    box-shadow:
+        0 0 0 2px #ffffff,
+        0 0 0 4px #000000,
+        0 5px 16px rgb(0 0 0 / 48%);
+    font-size: 16px;
+}
+
 .map :global(.maplibregl-ctrl-bottom-left),
 .map :global(.maplibregl-ctrl-bottom-right) {
     top: calc(12px + env(safe-area-inset-top));

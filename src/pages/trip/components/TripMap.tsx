@@ -7,6 +7,7 @@ import type {
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import type { TripPlace } from "../../../places/model";
+import type { PlaceSearchResult } from "../../../places/search";
 import type { CountryCode } from "../../../trips/countries";
 import styles from "./TripMap.module.css";
 import {
@@ -25,6 +26,7 @@ type TripMapProps = {
     focusedPlaceId: string | null;
     onPlaceSelect: (placeId: string) => void;
     places: TripPlace[];
+    searchPlace?: PlaceSearchResult | null;
 };
 
 const mapStyleUrl =
@@ -38,6 +40,11 @@ type PlaceMarker = {
     marker: MapLibreMarker;
 };
 
+type SearchMarker = {
+    element: HTMLDivElement;
+    marker: MapLibreMarker;
+};
+
 export function TripMap({
     countryCode,
     countryName,
@@ -45,16 +52,21 @@ export function TripMap({
     focusedPlaceId,
     onPlaceSelect,
     places,
+    searchPlace = null,
 }: TripMapProps) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<MapLibreMap | null>(null);
     const markerRef = useRef(new Map<string, PlaceMarker>());
+    const searchMarkerRef = useRef<SearchMarker | null>(null);
     const onPlaceSelectRef = useRef(onPlaceSelect);
     const [status, setStatus] = useState<MapStatus>("loading");
     const [loadAttempt, setLoadAttempt] = useState(0);
     const focusedPlace = places.find((place) => place.id === focusedPlaceId);
-    const focusedLatitude = focusedPlace?.coordinates.latitude;
-    const focusedLongitude = focusedPlace?.coordinates.longitude;
+    const focusedLatitude =
+        searchPlace?.coordinates.latitude ?? focusedPlace?.coordinates.latitude;
+    const focusedLongitude =
+        searchPlace?.coordinates.longitude ??
+        focusedPlace?.coordinates.longitude;
 
     useEffect(() => {
         onPlaceSelectRef.current = onPlaceSelect;
@@ -137,6 +149,8 @@ export function TripMap({
             window.clearTimeout(loadTimeout);
             markers.forEach(({ marker }) => marker.remove());
             markers.clear();
+            searchMarkerRef.current?.marker.remove();
+            searchMarkerRef.current = null;
             mapRef.current?.remove();
             mapRef.current = null;
         };
@@ -221,6 +235,46 @@ export function TripMap({
                     ? "true"
                     : "false";
             });
+
+            if (!searchPlace) {
+                searchMarkerRef.current?.marker.remove();
+                searchMarkerRef.current = null;
+                return;
+            }
+
+            let searchMarker = searchMarkerRef.current;
+
+            if (!searchMarker) {
+                const element = document.createElement("div");
+                const badge = document.createElement("span");
+
+                element.className = `${styles.marker} ${styles.searchMarker}`;
+                element.setAttribute("role", "img");
+                badge.className = styles.markerBadge;
+                badge.setAttribute("aria-hidden", "true");
+                badge.textContent = "•";
+                element.append(badge);
+
+                searchMarker = {
+                    element,
+                    marker: new Marker({ anchor: "bottom", element })
+                        .setLngLat([
+                            searchPlace.coordinates.longitude,
+                            searchPlace.coordinates.latitude,
+                        ])
+                        .addTo(map),
+                };
+                searchMarkerRef.current = searchMarker;
+            }
+
+            searchMarker.element.setAttribute(
+                "aria-label",
+                `${searchPlace.name} 검색 위치`,
+            );
+            searchMarker.marker.setLngLat([
+                searchPlace.coordinates.longitude,
+                searchPlace.coordinates.latitude,
+            ]);
         };
 
         void syncMarkers();
@@ -228,7 +282,7 @@ export function TripMap({
         return () => {
             disposed = true;
         };
-    }, [focusedPlaceId, places, status]);
+    }, [focusedPlaceId, places, searchPlace, status]);
 
     useEffect(() => {
         const map = mapRef.current;

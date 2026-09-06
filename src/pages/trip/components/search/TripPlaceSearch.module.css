@@ -1,0 +1,225 @@
+.root {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+}
+
+.form {
+    flex: 0 0 auto;
+}
+
+.label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.searchRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px;
+}
+
+.input {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 12px;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #a9a9a9;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.input::placeholder {
+    color: #777777;
+}
+
+.input:focus-visible {
+    border-color: #000000;
+    box-shadow: 0 0 0 1px #000000;
+}
+
+.input::-webkit-search-cancel-button {
+    cursor: pointer;
+}
+
+.submit {
+    display: flex;
+    min-width: 72px;
+    min-height: 44px;
+    padding: 0 13px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #ffffff;
+    background: #000000;
+    border: 1px solid #000000;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.submit svg {
+    width: 16px;
+    height: 16px;
+}
+
+.submit:hover:not(:disabled) {
+    background: #222222;
+}
+
+.submit:focus-visible,
+.resultButton:focus-visible,
+.attribution a:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 2px;
+}
+
+.submit:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}
+
+.scope {
+    margin: 7px 0 0;
+    color: #666666;
+    font-size: 11px;
+}
+
+.resultsArea {
+    min-height: 0;
+    margin-top: 14px;
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+.feedback {
+    margin: 18px 0 0;
+    color: #666666;
+    font-size: 13px;
+    line-height: 1.55;
+    text-align: center;
+}
+
+.error {
+    color: #9d1c1c;
+}
+
+.resultSummary {
+    margin: 0 0 8px;
+    color: #666666;
+    font-size: 11px;
+}
+
+.results {
+    display: grid;
+    padding: 0;
+    margin: 0;
+    gap: 7px;
+    list-style: none;
+}
+
+.result {
+    min-width: 0;
+}
+
+.resultButton {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 9px;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #d4d4d4;
+    border-radius: 6px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.resultButton:hover {
+    background: #f6f6f6;
+    border-color: #a9a9a9;
+}
+
+.resultButton[data-selected="true"] {
+    background: #f4f4f4;
+    border-color: #000000;
+    box-shadow: inset 0 0 0 1px #000000;
+}
+
+.pin {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    color: #ffffff;
+    background: #000000;
+    border-radius: 50%;
+}
+
+.pin svg {
+    width: 15px;
+    height: 15px;
+}
+
+.resultText {
+    min-width: 0;
+}
+
+.resultText strong {
+    display: block;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 750;
+    letter-spacing: -0.025em;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.resultText > span {
+    display: -webkit-box;
+    margin-top: 4px;
+    overflow: hidden;
+    color: #666666;
+    font-size: 11px;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.attribution {
+    margin: 8px 0 0;
+    flex: 0 0 auto;
+    color: #777777;
+    font-size: 10px;
+    line-height: 1.4;
+    text-align: right;
+}
+
+.attribution a {
+    color: inherit;
+}
+
+@media (max-width: 919px) {
+    .root {
+        margin: 0 -4px;
+    }
+
+    .resultButton {
+        padding: 10px;
+    }
+}
