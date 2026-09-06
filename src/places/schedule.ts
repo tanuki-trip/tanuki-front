@@ -7,10 +7,10 @@ import {
 
 export type ScheduleDay = TripPlace["day"];
 export type TripPlaceDetailsPatch = Partial<
-    Pick<TripPlace, "arrivalTime" | "memo">
+    Pick<TripPlace, "arrivalTime" | "memo" | "placeCost">
 >;
 
-function normalizeDayOrder(places: TripPlace[], day: ScheduleDay) {
+function normalizeDayOrder(places: readonly TripPlace[], day: ScheduleDay) {
     if (day === "bookmark") return places;
 
     const orderedIds = getTripPlacesForDay(places, day).map(
@@ -27,8 +27,37 @@ function normalizeDayOrder(places: TripPlace[], day: ScheduleDay) {
     );
 }
 
+function getNextScheduledPlaceId(
+    places: readonly TripPlace[],
+    target: TripPlace,
+) {
+    if (target.day === "bookmark") {
+        return null;
+    }
+
+    const dayPlaces = getTripPlacesForDay(places, target.day);
+    const targetIndex = dayPlaces.findIndex((place) => place.id === target.id);
+
+    return targetIndex >= 0 ? (dayPlaces[targetIndex + 1]?.id ?? null) : null;
+}
+
+function resetPlaceInbound(
+    places: readonly TripPlace[],
+    placeId: string | null,
+) {
+    if (!placeId) {
+        return places;
+    }
+
+    return places.map((place) =>
+        place.id === placeId
+            ? { ...place, inbound: createEmptyTripInbound() }
+            : place,
+    );
+}
+
 export function updateTripPlaceDetails(
-    places: TripPlace[],
+    places: readonly TripPlace[],
     placeId: string,
     patch: TripPlaceDetailsPatch,
 ) {
@@ -37,18 +66,21 @@ export function updateTripPlaceDetails(
     );
 }
 
-export function deleteTripPlace(places: TripPlace[], placeId: string) {
+export function deleteTripPlace(places: readonly TripPlace[], placeId: string) {
     const target = places.find((place) => place.id === placeId);
     if (!target || isFixedTripPlace(target)) return places;
 
+    const nextPlaceId = getNextScheduledPlaceId(places, target);
+    const remainingPlaces = places.filter((place) => place.id !== placeId);
+
     return normalizeDayOrder(
-        places.filter((place) => place.id !== placeId),
+        resetPlaceInbound(remainingPlaces, nextPlaceId),
         target.day,
     );
 }
 
 export function moveTripPlace(
-    places: TripPlace[],
+    places: readonly TripPlace[],
     placeId: string,
     targetDay: ScheduleDay,
 ) {
@@ -57,11 +89,22 @@ export function moveTripPlace(
         return places;
     }
 
+    const sourceNextPlaceId = getNextScheduledPlaceId(places, target);
     const normalized = normalizeDayOrder(
-        places.filter((place) => place.id !== placeId),
+        resetPlaceInbound(
+            places.filter((place) => place.id !== placeId),
+            sourceNextPlaceId,
+        ),
         target.day,
     );
-    const nextOrder = normalized.filter(
+    const targetNextPlaceId =
+        targetDay === "bookmark"
+            ? null
+            : (getTripPlacesForDay(normalized, targetDay).find(
+                  (place) => place.fixedPosition === "last",
+              )?.id ?? null);
+    const preparedPlaces = resetPlaceInbound(normalized, targetNextPlaceId);
+    const nextOrder = preparedPlaces.filter(
         (place) => place.day === targetDay,
     ).length;
     const moved: TripPlace = {
@@ -72,5 +115,5 @@ export function moveTripPlace(
         inbound: createEmptyTripInbound(),
     };
 
-    return normalizeDayOrder([...normalized, moved], targetDay);
+    return normalizeDayOrder([...preparedPlaces, moved], targetDay);
 }

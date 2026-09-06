@@ -692,8 +692,8 @@ describe("TripPlaceTimeline", () => {
         await user.clear(durationInput);
         await user.type(durationInput, "30");
 
-        expect(screen.getByLabelText("교통비 (JPY)")).toBeDisabled();
-        expect(screen.getByLabelText("패스권이에요")).toBeDisabled();
+        expect(screen.queryByLabelText("교통비 (JPY)")).not.toBeInTheDocument();
+        expect(screen.queryByLabelText("패스권이에요")).not.toBeInTheDocument();
         await user.click(screen.getByRole("button", { name: "저장" }));
 
         expect(onUpdateInbound).toHaveBeenCalledWith("place-2", {
@@ -739,7 +739,7 @@ describe("TripPlaceTimeline", () => {
         expect(modeSelect).toHaveFocus();
     });
 
-    it("stores a pass-covered movement without a separate fare", async () => {
+    it("preserves budget fields when schedule movement details change", async () => {
         const user = userEvent.setup();
         const onUpdateInbound = vi.fn();
 
@@ -761,50 +761,15 @@ describe("TripPlaceTimeline", () => {
                 name: "호텔 니혼바시까지 이동방법 수정",
             }),
         );
-        await user.click(screen.getByLabelText("패스권이에요"));
-
-        expect(screen.getByLabelText("교통비 (JPY)")).toBeDisabled();
+        const durationInput = screen.getByLabelText("예상 소요시간");
+        await user.clear(durationInput);
+        await user.type(durationInput, "25");
         await user.click(screen.getByRole("button", { name: "저장" }));
 
         expect(onUpdateInbound).toHaveBeenCalledWith("place-2", {
             mode: "subway",
-            durationMin: 24,
-            cost: null,
-            isPassCovered: true,
-        });
-    });
-
-    it("stores a manually entered transport fare", async () => {
-        const user = userEvent.setup();
-        const onUpdateInbound = vi.fn();
-
-        render(
-            <TripPlaceTimeline
-                activeDay={1}
-                dayCount={5}
-                onDeletePlace={vi.fn()}
-                onMovePlace={vi.fn()}
-                onReorder={vi.fn()}
-                onUpdateInbound={onUpdateInbound}
-                onUpdatePlace={vi.fn()}
-                places={places}
-            />,
-        );
-
-        await user.click(
-            screen.getByRole("button", {
-                name: "호텔 니혼바시까지 이동방법 수정",
-            }),
-        );
-        const costInput = screen.getByLabelText("교통비 (JPY)");
-        await user.clear(costInput);
-        await user.type(costInput, "250");
-        await user.click(screen.getByRole("button", { name: "저장" }));
-
-        expect(onUpdateInbound).toHaveBeenCalledWith("place-2", {
-            mode: "subway",
-            durationMin: 24,
-            cost: { amount: 250, currency: "JPY" },
+            durationMin: 25,
+            cost: { amount: 180, currency: "JPY" },
             isPassCovered: false,
         });
     });

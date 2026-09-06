@@ -1,6 +1,28 @@
 export type InboundMode =
     "walk" | "car" | "bus" | "subway" | "train" | "bike" | "other";
 
+export const MAX_TRIP_COST_AMOUNT = 999_999_999_999;
+
+export function isValidTripCostAmount(amount: number) {
+    return (
+        Number.isSafeInteger(amount) &&
+        amount >= 0 &&
+        amount <= MAX_TRIP_COST_AMOUNT
+    );
+}
+
+export type TripCostSplit =
+    | {
+          mode: "equal";
+          excludedMemberIds: string[];
+      }
+    | {
+          mode: "individual";
+          memberAmounts: Record<string, number>;
+      };
+
+export type TripCostPaymentMode = "single" | "individual";
+
 export type TripInbound = {
     mode: InboundMode | null;
     durationMin: number | null;
@@ -9,9 +31,22 @@ export type TripInbound = {
         currency: string;
     } | null;
     isPassCovered: boolean;
+    paymentMode?: TripCostPaymentMode;
+    payerId?: string;
+    split?: TripCostSplit;
 };
 
 export type FixedSchedulePosition = "first" | "last";
+export type TripCostCategory = "food" | "tourism" | "other";
+
+export type TripPlaceCost = {
+    amount: number;
+    currency: string;
+    category?: TripCostCategory;
+    paymentMode?: TripCostPaymentMode;
+    payerId?: string;
+    split?: TripCostSplit;
+};
 
 export type TripPlace = {
     id: string;
@@ -25,10 +60,7 @@ export type TripPlace = {
     order: number | null;
     arrivalTime: string | null;
     memo: string | null;
-    placeCost: {
-        amount: number;
-        currency: string;
-    };
+    placeCost: TripPlaceCost;
     inbound: TripInbound;
     fixedPosition: FixedSchedulePosition | null;
 };

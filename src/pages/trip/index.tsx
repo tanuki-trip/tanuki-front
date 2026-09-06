@@ -1,7 +1,13 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { getTripPlacesForDay, type TripInbound } from "../../places/model";
+import {
+    getTripPlacesForDay,
+    type TripInbound,
+    type TripPlace,
+    type TripPlaceCost,
+} from "../../places/model";
+import { createMockTripPlaces } from "../../places/mock";
 import { reorderDayPlaces } from "../../places/reorder";
 import type { PlaceSearchResult } from "../../places/search";
 import {
@@ -17,6 +23,7 @@ import { NotFoundPage } from "../not-found";
 import { TripContentPanel } from "./components/TripContentPanel";
 import { TripMap } from "./components/TripMap";
 import { TripNavigation, type TripTab } from "./components/TripNavigation";
+import { TripBudget } from "./components/budget/TripBudget";
 import { TripPlaceSearch } from "./components/search/TripPlaceSearch";
 import {
     TripDayBadges,
@@ -49,13 +56,20 @@ export function TripPage() {
 function TripWorkspace({ trip }: { trip: Trip }) {
     const [activeTab, setActiveTab] = useState<TripTab>("schedule");
     const [activeDay, setActiveDay] = useState<TripDayKey>(1);
+    const [totalBudgetAmount, setTotalBudgetAmount] = useState<number | null>(
+        null,
+    );
     const tripDays = useMemo(
         () => getTripDays(trip.startDate, trip.endDate),
         [trip.endDate, trip.startDate],
     );
-    const [places, setPlaces] = useState(() =>
-        createTripEndpointPlaces(trip, tripDays.length),
-    );
+    const [places, setPlaces] = useState<readonly TripPlace[]>(() => [
+        ...createTripEndpointPlaces(trip, tripDays.length),
+        ...createMockTripPlaces({
+            currencyCode: trip.currencyCode,
+            tripId: trip.id,
+        }),
+    ]);
     const searchHub = trip.arrivalHub ?? trip.departureHub;
     const activePlaces = useMemo(
         () => getTripPlacesForDay(places, activeDay),
@@ -127,6 +141,10 @@ function TripWorkspace({ trip }: { trip: Trip }) {
         );
     }
 
+    function handlePlaceCostChange(placeId: string, cost: TripPlaceCost) {
+        handlePlaceUpdate(placeId, { placeCost: cost });
+    }
+
     function handlePlaceDelete(placeId: string) {
         setPlaces((currentPlaces) => deleteTripPlace(currentPlaces, placeId));
         setMapFocus((currentFocus) =>
@@ -157,7 +175,11 @@ function TripWorkspace({ trip }: { trip: Trip }) {
             />
             <TripContentPanel
                 title={panelTitles[activeTab]}
-                hideTitle={activeTab === "schedule" || activeTab === "search"}
+                hideTitle={
+                    activeTab === "schedule" ||
+                    activeTab === "search" ||
+                    activeTab === "budget"
+                }
             >
                 {activeTab === "schedule" ? (
                     <>
@@ -197,6 +219,21 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                                 ? mapFocus.place.id
                                 : null
                         }
+                    />
+                ) : null}
+                {activeTab === "budget" ? (
+                    <TripBudget
+                        activeDay={activeDay}
+                        currencyCode={trip.currencyCode}
+                        endDate={trip.endDate}
+                        members={trip.members}
+                        onDayChange={handleDayChange}
+                        onInboundChange={handleInboundUpdate}
+                        onPlaceCostChange={handlePlaceCostChange}
+                        onTotalBudgetChange={setTotalBudgetAmount}
+                        places={places}
+                        startDate={trip.startDate}
+                        totalBudgetAmount={totalBudgetAmount}
                     />
                 ) : null}
             </TripContentPanel>

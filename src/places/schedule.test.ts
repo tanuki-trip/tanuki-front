@@ -33,6 +33,17 @@ function createPlace(
     };
 }
 
+function setPaidInbound(place: TripPlace, amount: number) {
+    place.inbound = {
+        mode: "bus",
+        durationMin: 20,
+        cost: { amount, currency: "JPY" },
+        isPassCovered: false,
+        payerId: "owner",
+        split: { mode: "equal", excludedMemberIds: [] },
+    };
+}
+
 describe("trip place schedule actions", () => {
     it("updates only the requested schedule fields", () => {
         const places = [createPlace("a", 1, 0), createPlace("b", 1, 1)];
@@ -58,6 +69,30 @@ describe("trip place schedule actions", () => {
 
         expect(result.map((place) => place.id)).toEqual(["a", "c"]);
         expect(result.map((place) => place.order)).toEqual([0, 1]);
+        expect(result[1]?.inbound).toEqual({
+            mode: null,
+            durationMin: null,
+            cost: null,
+            isPassCovered: false,
+        });
+    });
+
+    it("clears all finance fields from a route changed by deletion", () => {
+        const places = [
+            createPlace("a", 1, 0),
+            createPlace("b", 1, 1),
+            createPlace("c", 1, 2),
+        ];
+        setPaidInbound(places[2], 700);
+
+        const result = deleteTripPlace(places, "b");
+
+        expect(result.find((place) => place.id === "c")?.inbound).toEqual({
+            mode: null,
+            durationMin: null,
+            cost: null,
+            isPassCovered: false,
+        });
     });
 
     it("moves a place to the end of another day and resets route fields", () => {
@@ -80,6 +115,39 @@ describe("trip place schedule actions", () => {
                 cost: null,
                 isPassCovered: false,
             },
+        });
+    });
+
+    it("clears changed source and destination route segments when moving", () => {
+        const sourceFirst = createPlace("source-first", 1, 0);
+        const moving = createPlace("moving", 1, 1);
+        const sourceNext = createPlace("source-next", 1, 2);
+        const targetFirst = createPlace("target-first", 2, 0, "first");
+        const targetLast = createPlace("target-last", 2, 1, "last");
+        setPaidInbound(sourceNext, 700);
+        setPaidInbound(targetLast, 900);
+
+        const result = moveTripPlace(
+            [sourceFirst, moving, sourceNext, targetFirst, targetLast],
+            moving.id,
+            2,
+        );
+
+        expect(
+            result.find((place) => place.id === sourceNext.id)?.inbound,
+        ).toEqual({
+            mode: null,
+            durationMin: null,
+            cost: null,
+            isPassCovered: false,
+        });
+        expect(
+            result.find((place) => place.id === targetLast.id)?.inbound,
+        ).toEqual({
+            mode: null,
+            durationMin: null,
+            cost: null,
+            isPassCovered: false,
         });
     });
 

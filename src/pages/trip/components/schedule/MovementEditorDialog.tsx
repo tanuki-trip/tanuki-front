@@ -25,20 +25,10 @@ export function MovementEditorDialog({
     const titleId = useId();
     const modeLabelId = useId();
     const durationId = useId();
-    const costId = useId();
-    const currencyCode =
-        place.inbound.cost?.currency ?? place.placeCost.currency;
     const [mode, setMode] = useState<InboundMode>(place.inbound.mode ?? "walk");
     const [duration, setDuration] = useState(
         place.inbound.durationMin?.toString() ?? "",
     );
-    const [cost, setCost] = useState(
-        place.inbound.cost?.amount.toString() ?? "",
-    );
-    const [isPassCovered, setIsPassCovered] = useState(
-        place.inbound.isPassCovered,
-    );
-    const hasNoSeparateCost = mode === "walk" || isPassCovered;
 
     useEffect(() => {
         const dialog = dialogRef.current;
@@ -64,23 +54,25 @@ export function MovementEditorDialog({
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
+        if (mode === "walk") {
+            onSave({
+                mode,
+                durationMin: Number(duration),
+                cost: null,
+                isPassCovered: false,
+            });
+            return;
+        }
+
         onSave({
+            ...place.inbound,
             mode,
             durationMin: Number(duration),
-            cost:
-                hasNoSeparateCost || cost === ""
-                    ? null
-                    : { amount: Number(cost), currency: currencyCode },
-            isPassCovered: mode === "walk" ? false : isPassCovered,
         });
     }
 
     function handleModeChange(nextMode: InboundMode) {
         setMode(nextMode);
-        if (nextMode === "walk") {
-            setCost("");
-            setIsPassCovered(false);
-        }
     }
 
     return (
@@ -139,34 +131,6 @@ export function MovementEditorDialog({
                 <p className={styles.helper}>
                     경로 데이터가 없어 현재는 직접 입력해 주세요.
                 </p>
-
-                <div className={styles.field}>
-                    <label htmlFor={costId}>교통비 ({currencyCode})</label>
-                    <input
-                        id={costId}
-                        type="number"
-                        min="0"
-                        step="1"
-                        inputMode="numeric"
-                        placeholder={hasNoSeparateCost ? "별도 비용 없음" : "0"}
-                        disabled={hasNoSeparateCost}
-                        value={hasNoSeparateCost ? "" : cost}
-                        onChange={(event) => setCost(event.target.value)}
-                    />
-                </div>
-
-                <label className={styles.checkbox}>
-                    <input
-                        type="checkbox"
-                        checked={isPassCovered}
-                        disabled={mode === "walk"}
-                        onChange={(event) => {
-                            setIsPassCovered(event.target.checked);
-                            if (event.target.checked) setCost("");
-                        }}
-                    />
-                    <span>패스권이에요</span>
-                </label>
 
                 <footer className={styles.actions}>
                     <button type="button" onClick={onClose}>

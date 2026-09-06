@@ -108,7 +108,7 @@ describe("AppRouter", () => {
         expect(
             screen.getByRole("region", { name: "1일차 장소" }),
         ).toBeInTheDocument();
-        expect(screen.getAllByRole("article")).toHaveLength(1);
+        expect(screen.getAllByRole("article")).toHaveLength(4);
         expect(screen.getByText("첫 일정으로 고정")).toBeVisible();
         expect(
             screen.getByRole("button", {
@@ -161,6 +161,16 @@ describe("AppRouter", () => {
         await user.click(screen.getByRole("button", { name: "예산" }));
         expect(
             screen.getByRole("complementary", { name: "예산" }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole("heading", { name: "예산" }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.getByRole("region", { name: "예산 요약" }),
+        ).toBeInTheDocument();
+        expect(screen.getByText("현재 사용한 금액")).toBeVisible();
+        expect(
+            screen.getByRole("region", { name: "3일차 예산" }),
         ).toBeInTheDocument();
         expect(screen.getByRole("region", { name: "일본 여행 지도" })).toBe(
             mapRegion,

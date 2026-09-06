@@ -1,0 +1,238 @@
+.categoryFieldset,
+.payerFieldset,
+.memberFieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.categoryFieldset legend,
+.payerFieldset legend,
+.memberFieldset legend {
+    margin-bottom: 7px;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.categoryOptions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.categoryOption {
+    display: flex;
+    min-width: 0;
+    min-height: 62px;
+    padding: 8px 6px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid #b9b9b9;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.categoryOption input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.categoryOption svg {
+    width: 17px;
+    height: 17px;
+}
+
+.categoryOption:hover,
+.categoryOption:focus-within {
+    border-color: #000000;
+}
+
+.categoryOption[data-selected="true"] {
+    color: #ffffff;
+    background: #000000;
+    border-color: #000000;
+}
+
+.payerOptions {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.payerHeader {
+    display: flex;
+    margin-bottom: 7px;
+    align-items: center;
+    gap: 8px;
+}
+
+.payerHeader > span {
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.payerOption {
+    display: flex;
+    min-width: 68px;
+    min-height: 36px;
+    padding: 7px 10px;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #b9b9b9;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.payerOption input,
+.individualPayerOption input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.payerOption:hover,
+.payerOption:focus-within,
+.individualPayerOption:hover,
+.individualPayerOption:focus-within {
+    border-color: #000000;
+}
+
+.payerOption[data-selected="true"],
+.individualPayerOption[data-selected="true"] {
+    color: #ffffff;
+    background: #000000;
+    border-color: #000000;
+}
+
+.individualPayerOption {
+    display: flex;
+    min-height: 22px;
+    padding: 2px 8px;
+    align-items: center;
+    color: #555555;
+    background: #ffffff;
+    border: 1px solid #b9b9b9;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.splitToggle {
+    display: flex;
+    width: fit-content;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.splitToggle input,
+.memberOption input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #000000;
+}
+
+.memberOptions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.memberOption {
+    display: flex;
+    min-height: 36px;
+    padding: 7px 9px;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #b9b9b9;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.memberOption small {
+    color: #777777;
+    font-size: 9px;
+}
+
+.memberOption[data-excluded="true"] {
+    color: #666666;
+    background: #f2f2f2;
+}
+
+.memberOption:has(input:disabled) {
+    cursor: default;
+}
+
+.memberAmounts {
+    display: grid;
+    gap: 7px;
+}
+
+.memberAmount {
+    display: grid;
+    grid-template-columns: minmax(70px, 1fr) minmax(0, 170px);
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.amountInput {
+    position: relative;
+    display: block;
+}
+
+.amountInput input {
+    width: 100%;
+    height: 38px;
+    padding: 0 42px 0 10px;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #b9b9b9;
+    border-radius: 5px;
+    font: inherit;
+    font-weight: 650;
+}
+
+.amountInput input:focus {
+    border-color: #000000;
+    outline: 1px solid #000000;
+}
+
+.amountInput > span {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    color: #666666;
+    font-size: 9px;
+    transform: translateY(-50%);
+}
+
+.splitSummary {
+    margin: 9px 0 0;
+    color: #666666;
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.45;
+}
+
+.splitSummary[data-invalid="true"] {
+    color: #b42318;
+}
