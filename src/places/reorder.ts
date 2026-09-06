@@ -6,7 +6,7 @@ import {
 } from "./model";
 
 export function reorderDayPlaces(
-    places: TripPlace[],
+    places: readonly TripPlace[],
     day: number | "bookmark",
     sourceId: string,
     targetId: string,

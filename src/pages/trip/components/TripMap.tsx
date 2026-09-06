@@ -25,7 +25,7 @@ type TripMapProps = {
     focusRequest: number;
     focusedPlaceId: string | null;
     onPlaceSelect: (placeId: string) => void;
-    places: TripPlace[];
+    places: readonly TripPlace[];
     searchPlace?: PlaceSearchResult | null;
 };
 
