@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import type { FormEvent } from "react";
 
 import type { TripPlace } from "../../../../places/model";
@@ -7,7 +7,8 @@ import type {
     ScheduleDay,
     TripPlaceDetailsPatch,
 } from "../../../../places/schedule";
-import styles from "./MovementEditorDialog.module.css";
+import styles from "../TripEditorDialog.module.css";
+import { useTripDialog } from "../useTripDialog";
 
 export type PlaceMenuAction = "arrival" | "memo" | "move" | "delete";
 
@@ -38,7 +39,7 @@ export function PlaceActionDialog({
     onUpdate,
     place,
 }: PlaceActionDialogProps) {
-    const dialogRef = useRef<HTMLDialogElement>(null);
+    const dialogRef = useTripDialog();
     const titleId = useId();
     const arrivalId = useId();
     const memoId = useId();
@@ -52,24 +53,6 @@ export function PlaceActionDialog({
         availableDays[0] ?? "bookmark",
     );
     const labels = dialogLabels[action];
-
-    useEffect(() => {
-        const dialog = dialogRef.current;
-        const previousFocus = document.activeElement as HTMLElement | null;
-
-        if (!dialog) return;
-
-        if (typeof dialog.showModal === "function") dialog.showModal();
-        else dialog.open = true;
-        dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
-
-        return () => {
-            if (dialog.open && typeof dialog.close === "function") {
-                dialog.close();
-            }
-            previousFocus?.focus();
-        };
-    }, []);
 
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();

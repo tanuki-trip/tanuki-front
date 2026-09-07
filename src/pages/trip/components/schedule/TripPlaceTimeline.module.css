@@ -1,8 +1,10 @@
 .timeline {
+    min-width: 0;
     min-height: 0;
     margin: 8px -16px 0;
     padding: 0 16px;
     flex: 1;
+    overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior-y: contain;
 }
@@ -15,9 +17,14 @@
 
 .list {
     display: grid;
+    min-width: 0;
     margin: 0;
     padding: 8px 0 20px;
     list-style: none;
+}
+
+.list > li {
+    min-width: 0;
 }
 
 .bookmarkList {
@@ -92,6 +99,8 @@
 
 .card {
     position: relative;
+    min-width: 0;
+    max-width: 100%;
     padding: 13px;
     color: #000000;
     background: #ffffff;
@@ -157,6 +166,7 @@
 
 .cardHeader {
     display: flex;
+    min-width: 0;
     align-items: flex-start;
     gap: 10px;
 }
@@ -176,6 +186,7 @@
 .placeHeading {
     min-width: 0;
     flex: 1;
+    overflow: hidden;
 }
 
 .placeHeading h3 {
@@ -186,7 +197,10 @@
 }
 
 .placeHeadingButton {
+    display: block;
+    width: 100%;
     padding: 0;
+    overflow: hidden;
     color: inherit;
     background: transparent;
     border: 0;
@@ -195,6 +209,8 @@
     letter-spacing: inherit;
     line-height: inherit;
     text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     cursor: pointer;
 }
 
@@ -204,6 +220,8 @@
 }
 
 .card .address {
+    width: 100%;
+    max-width: 100%;
     margin-top: 3px;
     overflow: hidden;
     color: #666666;

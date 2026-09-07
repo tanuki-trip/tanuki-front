@@ -77,10 +77,15 @@
 }
 
 .submit:focus-visible,
-.resultButton:focus-visible,
 .attribution a:focus-visible {
     outline: 2px solid #000000;
     outline-offset: 2px;
+}
+
+.resultButton:focus-visible,
+.addButton:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: -3px;
 }
 
 .submit:disabled {
@@ -130,20 +135,24 @@
 }
 
 .result {
+    position: relative;
     min-width: 0;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #d4d4d4;
+    border-radius: 6px;
 }
 
 .resultButton {
     display: grid;
     width: 100%;
     min-width: 0;
-    padding: 12px;
+    padding: 12px 72px 12px 12px;
     grid-template-columns: 28px minmax(0, 1fr);
     gap: 9px;
     color: #000000;
-    background: #ffffff;
-    border: 1px solid #d4d4d4;
-    border-radius: 6px;
+    background: transparent;
+    border: 0;
     font: inherit;
     text-align: left;
     cursor: pointer;
@@ -151,13 +160,52 @@
 
 .resultButton:hover {
     background: #f6f6f6;
-    border-color: #a9a9a9;
 }
 
-.resultButton[data-selected="true"] {
+.result[data-selected="true"] {
     background: #f4f4f4;
     border-color: #000000;
     box-shadow: inset 0 0 0 1px #000000;
+}
+
+.addButton {
+    position: absolute;
+    top: 50%;
+    right: 9px;
+    display: flex;
+    width: 30px;
+    min-width: 0;
+    min-height: 30px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #000000;
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.addButton:hover {
+    color: #ffffff;
+    background: #000000;
+}
+
+.addButton svg {
+    width: 12px;
+    height: 12px;
+}
+
+.addButton::after {
+    position: absolute;
+    inset: -6px -4px;
+    content: "";
 }
 
 .pin {
@@ -220,6 +268,6 @@
     }
 
     .resultButton {
-        padding: 10px;
+        padding: 10px 68px 10px 10px;
     }
 }

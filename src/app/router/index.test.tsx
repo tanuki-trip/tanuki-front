@@ -1,15 +1,31 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useAuthStore } from "../../auth/store";
+import { searchPlaces } from "../../places/search";
+import { initialTrips, useTripStore } from "../../trips/store";
 
 import { AppRouter } from ".";
+
+vi.mock("../../places/search", async (importOriginal) => {
+    const original =
+        await importOriginal<typeof import("../../places/search")>();
+
+    return {
+        ...original,
+        searchPlaces: vi.fn(),
+    };
+});
+
+const mockedSearchPlaces = vi.mocked(searchPlaces);
 
 const initialAuthState = useAuthStore.getState();
 
 afterEach(() => {
+    vi.clearAllMocks();
     useAuthStore.setState(initialAuthState, true);
+    useTripStore.setState({ trips: initialTrips });
     window.history.replaceState({}, "", "/");
 });
 
@@ -25,6 +41,80 @@ describe("AppRouter", () => {
                 name: "가고 싶은 곳을 지도에서 찾아보세요.",
             }),
         ).toBeInTheDocument();
+    });
+
+    it("adds a searched place to the selected day and its budget", async () => {
+        const user = userEvent.setup();
+        mockedSearchPlaces.mockResolvedValue([
+            {
+                id: "way-123",
+                name: "도쿄 타워",
+                address: "도쿄도 미나토구 시바코엔 4-2-8",
+                coordinates: { latitude: 35.6586, longitude: 139.7454 },
+            },
+        ]);
+        useAuthStore.setState({
+            status: "authenticated",
+            user: {
+                id: "user-1",
+                displayName: "테스트 사용자",
+                email: "test@example.com",
+                photoUrl: null,
+            },
+        });
+        window.history.replaceState({}, "", "/trip/japan-tokyo");
+
+        render(<AppRouter />);
+
+        await user.click(
+            screen.getByRole("button", {
+                name: "3일차, 10월 10일 토요일",
+            }),
+        );
+        await user.click(screen.getByRole("button", { name: "장소 검색" }));
+        await user.type(
+            screen.getByRole("searchbox", { name: "장소명 또는 주소" }),
+            "도쿄 타워",
+        );
+        await user.click(screen.getByRole("button", { name: "검색" }));
+        await user.click(
+            await screen.findByRole("button", {
+                name: "도쿄 타워 일정에 추가",
+            }),
+        );
+        const addDialog = screen.getByRole("dialog", { name: "일정에 추가" });
+        await user.click(
+            within(addDialog).getByRole("radio", { name: "2일차" }),
+        );
+        await user.click(
+            within(addDialog).getByRole("button", { name: "추가" }),
+        );
+
+        expect(screen.getByRole("button", { name: "일정" })).toHaveAttribute(
+            "aria-pressed",
+            "true",
+        );
+        const schedule = screen.getByRole("region", { name: "2일차 장소" });
+        expect(within(schedule).getByText("도쿄 타워")).toBeVisible();
+        expect(
+            within(schedule).getByRole("button", {
+                name: "지도에서 도쿄 타워 보기",
+            }),
+        ).toHaveAttribute("aria-pressed", "true");
+        expect(
+            within(schedule).getByRole("button", {
+                name: "지도에서 도쿄 타워 보기",
+            }),
+        ).toHaveFocus();
+
+        await user.click(screen.getByRole("button", { name: "예산" }));
+
+        const budget = screen.getByRole("region", { name: "2일차 예산" });
+        expect(
+            within(budget).getByRole("button", {
+                name: "도쿄 타워 금액 수정, 현재 미입력",
+            }),
+        ).toBeVisible();
     });
 
     it("renders the trip wizard for authenticated users", () => {

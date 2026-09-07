@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import {
@@ -11,6 +11,7 @@ import { createMockTripPlaces } from "../../places/mock";
 import { reorderDayPlaces } from "../../places/reorder";
 import type { PlaceSearchResult } from "../../places/search";
 import {
+    addSearchPlaceToSchedule,
     deleteTripPlace,
     moveTripPlace,
     updateTripPlaceDetails,
@@ -86,6 +87,25 @@ function TripWorkspace({ trip }: { trip: Trip }) {
             ? { source: "schedule", placeId: firstPlace.id, request: 1 }
             : null;
     });
+    const addedSearchPlaceSequenceRef = useRef(0);
+    const pendingAddedPlaceFocusRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        const placeId = pendingAddedPlaceFocusRef.current;
+
+        if (activeTab !== "schedule" || !placeId) {
+            return;
+        }
+
+        const placeCard = Array.from(
+            document.querySelectorAll<HTMLElement>("[data-place-id]"),
+        ).find((element) => element.dataset.placeId === placeId);
+
+        placeCard
+            ?.querySelector<HTMLButtonElement>("[data-place-focus='true']")
+            ?.focus();
+        pendingAddedPlaceFocusRef.current = null;
+    }, [activeTab, places]);
 
     function handleTabChange(tab: TripTab) {
         if (tab === activeTab) {
@@ -119,6 +139,28 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                   }
                 : null,
         );
+    }
+
+    function handleSearchPlaceAdd(result: PlaceSearchResult, day: ScheduleDay) {
+        addedSearchPlaceSequenceRef.current += 1;
+        const placeId = `search-${trip.id}-${addedSearchPlaceSequenceRef.current}`;
+
+        pendingAddedPlaceFocusRef.current = placeId;
+        setPlaces((currentPlaces) =>
+            addSearchPlaceToSchedule(currentPlaces, {
+                currencyCode: trip.currencyCode,
+                day,
+                id: placeId,
+                result,
+            }),
+        );
+        setActiveDay(day);
+        setActiveTab("schedule");
+        setMapFocus((currentFocus) => ({
+            source: "schedule",
+            placeId,
+            request: (currentFocus?.request ?? 0) + 1,
+        }));
     }
 
     function handleReorder(sourceId: string, targetId: string) {
@@ -211,6 +253,9 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                     <TripPlaceSearch
                         countryCode={trip.countryCode}
                         countryName={trip.country}
+                        dayCount={tripDays.length}
+                        defaultDay={activeDay}
+                        onPlaceAdd={handleSearchPlaceAdd}
                         onPlaceSelect={handleSearchPlaceSelect}
                         searchCenter={searchHub?.coordinates}
                         searchRegion={searchHub?.region}

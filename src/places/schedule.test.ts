@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { TripPlace } from "./model";
 import {
+    addSearchPlaceToSchedule,
     deleteTripPlace,
     moveTripPlace,
     updateTripPlaceDetails,
@@ -45,6 +46,104 @@ function setPaidInbound(place: TripPlace, amount: number) {
 }
 
 describe("trip place schedule actions", () => {
+    it("adds a searched place before the fixed departure with empty budget fields", () => {
+        const arrival = createPlace("arrival", 1, 0, "first");
+        const departure = createPlace("departure", 1, 1, "last");
+        setPaidInbound(departure, 900);
+
+        const result = addSearchPlaceToSchedule([arrival, departure], {
+            currencyCode: "JPY",
+            day: 1,
+            id: "search-trip-1",
+            result: {
+                id: "node-123",
+                name: "도쿄 타워",
+                address: "4 Chome-2-8 Shibakoen, Minato City",
+                coordinates: { latitude: 35.6586, longitude: 139.7454 },
+            },
+        });
+
+        expect(result.map(({ id }) => id)).toEqual([
+            "arrival",
+            "departure",
+            "search-trip-1",
+        ]);
+        expect(
+            result
+                .filter(({ day }) => day === 1)
+                .sort((left, right) => (left.order ?? 0) - (right.order ?? 0))
+                .map(({ id }) => id),
+        ).toEqual(["arrival", "search-trip-1", "departure"]);
+        expect(result.find(({ id }) => id === "search-trip-1")).toMatchObject({
+            arrivalTime: null,
+            day: 1,
+            fixedPosition: null,
+            inbound: {
+                mode: null,
+                durationMin: null,
+                cost: null,
+                isPassCovered: false,
+            },
+            memo: null,
+            placeCost: { amount: 0, currency: "JPY" },
+        });
+        expect(result.find(({ id }) => id === "departure")?.inbound).toEqual({
+            mode: null,
+            durationMin: null,
+            cost: null,
+            isPassCovered: false,
+        });
+    });
+
+    it("does not add a searched place with a duplicate schedule id", () => {
+        const places = [createPlace("search-trip-1", 1, 0)];
+
+        expect(
+            addSearchPlaceToSchedule(places, {
+                currencyCode: "JPY",
+                day: 1,
+                id: "search-trip-1",
+                result: {
+                    id: "node-123",
+                    name: "도쿄 타워",
+                    address: "도쿄도 미나토구",
+                    coordinates: {
+                        latitude: 35.6586,
+                        longitude: 139.7454,
+                    },
+                },
+            }),
+        ).toBe(places);
+    });
+
+    it("adds a searched place to bookmarks without changing a scheduled route", () => {
+        const departure = createPlace("departure", 1, 0, "last");
+        setPaidInbound(departure, 900);
+
+        const result = addSearchPlaceToSchedule([departure], {
+            currencyCode: "JPY",
+            day: "bookmark",
+            id: "search-bookmark-1",
+            result: {
+                id: "node-456",
+                name: "우에노 공원",
+                address: "도쿄도 다이토구 우에노코엔",
+                coordinates: { latitude: 35.7148, longitude: 139.7732 },
+            },
+        });
+
+        expect(
+            result.find(({ id }) => id === "search-bookmark-1"),
+        ).toMatchObject({
+            day: "bookmark",
+            order: null,
+            placeCost: { amount: 0, currency: "JPY" },
+        });
+        expect(result.find(({ id }) => id === "departure")?.inbound).toEqual(
+            departure.inbound,
+        );
+    });
+
     it("updates only the requested schedule fields", () => {
         const places = [createPlace("a", 1, 0), createPlace("b", 1, 1)];
         const result = updateTripPlaceDetails(places, "b", {

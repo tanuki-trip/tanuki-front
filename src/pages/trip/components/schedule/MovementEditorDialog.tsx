@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import type { FormEvent } from "react";
 
 import type {
@@ -7,8 +7,9 @@ import type {
     TripInbound,
     TripPlace,
 } from "../../../../places/model";
+import { useTripDialog } from "../useTripDialog";
+import styles from "../TripEditorDialog.module.css";
 import { MovementModeSelect } from "./MovementModeSelect";
-import styles from "./MovementEditorDialog.module.css";
 
 type MovementEditorDialogProps = {
     onClose: () => void;
@@ -21,7 +22,7 @@ export function MovementEditorDialog({
     onSave,
     place,
 }: MovementEditorDialogProps) {
-    const dialogRef = useRef<HTMLDialogElement>(null);
+    const dialogRef = useTripDialog("[role='combobox']");
     const titleId = useId();
     const modeLabelId = useId();
     const durationId = useId();
@@ -29,27 +30,6 @@ export function MovementEditorDialog({
     const [duration, setDuration] = useState(
         place.inbound.durationMin?.toString() ?? "",
     );
-
-    useEffect(() => {
-        const dialog = dialogRef.current;
-        const previousFocus = document.activeElement as HTMLElement | null;
-
-        if (!dialog) return;
-
-        if (typeof dialog.showModal === "function") {
-            dialog.showModal();
-        } else {
-            dialog.open = true;
-        }
-        dialog.querySelector<HTMLElement>("[role='combobox']")?.focus();
-
-        return () => {
-            if (dialog.open && typeof dialog.close === "function") {
-                dialog.close();
-            }
-            previousFocus?.focus();
-        };
-    }, []);
 
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();

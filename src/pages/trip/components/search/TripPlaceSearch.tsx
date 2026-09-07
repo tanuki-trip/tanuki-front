@@ -1,5 +1,5 @@
-import { MapPin, Search } from "lucide-react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { MapPin, Plus, Search } from "lucide-react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 
 import {
     PlaceSearchError,
@@ -7,14 +7,19 @@ import {
     type PlaceSearchOptions,
     type PlaceSearchResult,
 } from "../../../../places/search";
+import type { ScheduleDay } from "../../../../places/schedule";
 import type { CountryCode } from "../../../../trips/countries";
+import { SearchPlaceDayDialog } from "./SearchPlaceDayDialog";
 import styles from "./TripPlaceSearch.module.css";
 
 type TripPlaceSearchProps = {
     countryCode: CountryCode;
     countryName: string;
+    dayCount: number;
+    defaultDay: ScheduleDay;
     searchCenter?: PlaceSearchOptions["center"];
     searchRegion?: string;
+    onPlaceAdd: (place: PlaceSearchResult, day: ScheduleDay) => void;
     onPlaceSelect: (place: PlaceSearchResult | null) => void;
     selectedPlaceId?: string | null;
 };
@@ -39,8 +44,11 @@ function getSearchErrorMessage(error: unknown) {
 export function TripPlaceSearch({
     countryCode,
     countryName,
+    dayCount,
+    defaultDay,
     searchCenter,
     searchRegion,
+    onPlaceAdd,
     onPlaceSelect,
     selectedPlaceId = null,
 }: TripPlaceSearchProps) {
@@ -48,7 +56,11 @@ export function TripPlaceSearch({
     const [searchState, setSearchState] = useState<SearchState>({
         status: "idle",
     });
+    const [placeToAdd, setPlaceToAdd] = useState<PlaceSearchResult | null>(
+        null,
+    );
     const requestControllerRef = useRef<AbortController | null>(null);
+    const searchScopeId = useId();
 
     useEffect(
         () => () => {
@@ -121,8 +133,6 @@ export function TripPlaceSearch({
         }
     }
 
-    const statusMessageId = "trip-place-search-status";
-
     return (
         <section
             className={styles.root}
@@ -141,7 +151,7 @@ export function TripPlaceSearch({
                         value={query}
                         maxLength={120}
                         autoComplete="off"
-                        aria-describedby={statusMessageId}
+                        aria-describedby={searchScopeId}
                         placeholder={`${countryName}의 장소를 검색하세요`}
                         onChange={(event) => setQuery(event.target.value)}
                     />
@@ -154,16 +164,12 @@ export function TripPlaceSearch({
                         <span>검색</span>
                     </button>
                 </div>
-                <p className={styles.scope}>
+                <p className={styles.scope} id={searchScopeId}>
                     검색 우선 지역 · {searchRegion ?? countryName}
                 </p>
             </form>
 
-            <div
-                className={styles.resultsArea}
-                id={statusMessageId}
-                aria-live="polite"
-            >
+            <div className={styles.resultsArea}>
                 {searchState.status === "idle" ? (
                     <p className={styles.feedback}>
                         한국어 장소명이나 주소를 입력한 뒤 검색해 보세요.
@@ -177,7 +183,7 @@ export function TripPlaceSearch({
                 ) : null}
 
                 {searchState.status === "empty" ? (
-                    <p className={styles.feedback}>
+                    <p className={styles.feedback} role="status">
                         ‘{searchState.query}’의 정확한 검색 결과가 없어요.
                         건물명이나 가까운 명소로 검색해 보세요.
                     </p>
@@ -194,13 +200,21 @@ export function TripPlaceSearch({
 
                 {searchState.status === "success" ? (
                     <>
-                        <p className={styles.resultSummary}>
+                        <p className={styles.resultSummary} role="status">
                             ‘{searchState.query}’ 검색 결과{" "}
                             {searchState.results.length}개
                         </p>
                         <ol className={styles.results}>
                             {searchState.results.map((result) => (
-                                <li className={styles.result} key={result.id}>
+                                <li
+                                    className={styles.result}
+                                    data-selected={
+                                        selectedPlaceId === result.id
+                                            ? "true"
+                                            : "false"
+                                    }
+                                    key={result.id}
+                                >
                                     <button
                                         className={styles.resultButton}
                                         type="button"
@@ -225,6 +239,14 @@ export function TripPlaceSearch({
                                             <strong>{result.name}</strong>
                                             <span>{result.address}</span>
                                         </span>
+                                    </button>
+                                    <button
+                                        className={styles.addButton}
+                                        type="button"
+                                        aria-label={`${result.name} 일정에 추가`}
+                                        onClick={() => setPlaceToAdd(result)}
+                                    >
+                                        <Plus aria-hidden="true" />
                                     </button>
                                 </li>
                             ))}
@@ -255,6 +277,19 @@ export function TripPlaceSearch({
                     </>
                 ) : null}
             </p>
+
+            {placeToAdd ? (
+                <SearchPlaceDayDialog
+                    dayCount={dayCount}
+                    defaultDay={defaultDay}
+                    onClose={() => setPlaceToAdd(null)}
+                    onConfirm={(day) => {
+                        onPlaceAdd(placeToAdd, day);
+                        setPlaceToAdd(null);
+                    }}
+                    place={placeToAdd}
+                />
+            ) : null}
         </section>
     );
 }

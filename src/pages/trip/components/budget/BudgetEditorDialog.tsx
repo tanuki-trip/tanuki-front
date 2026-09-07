@@ -5,7 +5,7 @@ import {
     X,
     type LucideIcon,
 } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import type { FormEvent } from "react";
 
 import {
@@ -17,7 +17,8 @@ import {
     type TripPlaceCost,
 } from "../../../../places/model";
 import type { TripMember } from "../../../../trips/store";
-import dialogStyles from "../schedule/MovementEditorDialog.module.css";
+import dialogStyles from "../TripEditorDialog.module.css";
+import { useTripDialog } from "../useTripDialog";
 import styles from "./BudgetEditorDialog.module.css";
 import { ExpenseAllocationFields } from "./ExpenseAllocationFields";
 import { useExpenseAllocation } from "./useExpenseAllocation";
@@ -59,7 +60,7 @@ const categoryOptions: Array<{
 
 export function BudgetEditorDialog(props: BudgetEditorDialogProps) {
     const { currencyCode, onClose } = props;
-    const dialogRef = useRef<HTMLDialogElement>(null);
+    const dialogRef = useTripDialog();
     const titleId = useId();
     const amountId = useId();
     const isPlaceEditor = props.mode === "place";
@@ -88,24 +89,6 @@ export function BudgetEditorDialog(props: BudgetEditorDialogProps) {
         isTransportEditor ? props.place.inbound.isPassCovered : false,
     );
     const allocationController = useExpenseAllocation(members, expense);
-
-    useEffect(() => {
-        const dialog = dialogRef.current;
-        const previousFocus = document.activeElement as HTMLElement | null;
-
-        if (!dialog) return;
-
-        if (typeof dialog.showModal === "function") dialog.showModal();
-        else dialog.open = true;
-        dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
-
-        return () => {
-            if (dialog.open && typeof dialog.close === "function") {
-                dialog.close();
-            }
-            previousFocus?.focus();
-        };
-    }, []);
 
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();

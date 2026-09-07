@@ -4,11 +4,19 @@ import {
     isFixedTripPlace,
     type TripPlace,
 } from "./model";
+import type { PlaceSearchResult } from "./search";
 
 export type ScheduleDay = TripPlace["day"];
 export type TripPlaceDetailsPatch = Partial<
     Pick<TripPlace, "arrivalTime" | "memo" | "placeCost">
 >;
+
+type SearchPlaceScheduleInput = {
+    currencyCode: string;
+    day: ScheduleDay;
+    id: string;
+    result: PlaceSearchResult;
+};
 
 function normalizeDayOrder(places: readonly TripPlace[], day: ScheduleDay) {
     if (day === "bookmark") return places;
@@ -54,6 +62,42 @@ function resetPlaceInbound(
             ? { ...place, inbound: createEmptyTripInbound() }
             : place,
     );
+}
+
+export function addSearchPlaceToSchedule(
+    places: readonly TripPlace[],
+    { currencyCode, day, id, result }: SearchPlaceScheduleInput,
+) {
+    if (places.some((place) => place.id === id)) {
+        return places;
+    }
+
+    const fixedLastPlaceId =
+        getTripPlacesForDay(places, day).find(
+            (place) => place.fixedPosition === "last",
+        )?.id ?? null;
+    const preparedPlaces = resetPlaceInbound(places, fixedLastPlaceId);
+    const addedPlace: TripPlace = {
+        id,
+        name: result.name,
+        address: result.address,
+        coordinates: result.coordinates,
+        day,
+        order:
+            day === "bookmark"
+                ? null
+                : getTripPlacesForDay(preparedPlaces, day).length,
+        arrivalTime: null,
+        memo: null,
+        placeCost: {
+            amount: 0,
+            currency: currencyCode,
+        },
+        inbound: createEmptyTripInbound(),
+        fixedPosition: null,
+    };
+
+    return normalizeDayOrder([...preparedPlaces, addedPlace], day);
 }
 
 export function updateTripPlaceDetails(
