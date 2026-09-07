@@ -2,7 +2,7 @@
     --mobile-navigation-height: calc(
         58px + max(7px, env(safe-area-inset-bottom))
     );
-    --mobile-trip-panel-height: 50dvh;
+    --mobile-trip-panel-height: 44dvh;
 
     min-height: 100dvh;
     color: #000000;
