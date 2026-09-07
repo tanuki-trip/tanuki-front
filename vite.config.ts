@@ -7,6 +7,7 @@ const authPopupHeaders = {
 
 // https://vite.dev/config/
 export default defineConfig({
+    base: process.env.BASE_PATH ?? "/",
     plugins: [react()],
     optimizeDeps: {
         exclude: ["maplibre-gl"],
