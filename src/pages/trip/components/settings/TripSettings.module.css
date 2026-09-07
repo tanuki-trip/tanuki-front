@@ -1,0 +1,237 @@
+.form {
+    min-height: 0;
+    margin: 0 -16px;
+    padding: 0 16px 24px;
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+}
+
+.section {
+    display: grid;
+    padding: 16px 0 18px;
+    border-bottom: 1px solid #e2e2e2;
+    gap: 12px;
+}
+
+.section:first-child {
+    padding-top: 2px;
+}
+
+.section h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.sectionHeader {
+    display: flex;
+    min-height: 32px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.sectionHeader button {
+    display: inline-flex;
+    min-height: 30px;
+    padding: 0 9px;
+    align-items: center;
+    gap: 4px;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #bdbdbd;
+    border-radius: 5px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.sectionHeader button svg {
+    width: 13px;
+    height: 13px;
+}
+
+.field {
+    display: grid;
+    min-width: 0;
+    gap: 6px;
+}
+
+.field > span {
+    color: #555555;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.readonlyField {
+    display: flex;
+    min-height: 24px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 11px;
+}
+
+.readonlyField span {
+    color: #777777;
+    font-weight: 700;
+}
+
+.readonlyField strong {
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.field input,
+.field select,
+.memberField input {
+    width: 100%;
+    min-width: 0;
+    height: 40px;
+    padding: 0 10px;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid #bdbdbd;
+    border-radius: 5px;
+    font: inherit;
+    font-size: 12px;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.memberField input:focus-visible,
+.sectionHeader button:focus-visible,
+.memberField > button:focus-visible,
+.saveButton:focus-visible {
+    border-color: #000000;
+    outline: 2px solid #000000;
+    outline-offset: 1px;
+}
+
+.dateFields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.memberFields {
+    display: grid;
+    gap: 7px;
+}
+
+.memberField {
+    display: grid;
+    min-width: 0;
+    align-items: center;
+    grid-template-columns: minmax(0, 1fr) 34px;
+    gap: 6px;
+}
+
+.memberField label {
+    min-width: 0;
+}
+
+.memberField > button {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    place-items: center;
+    color: #666666;
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.memberField > button:hover {
+    color: #000000;
+    background: #eeeeee;
+}
+
+.memberField > button svg {
+    width: 14px;
+    height: 14px;
+}
+
+.ownerLabel {
+    color: #777777;
+    font-size: 10px;
+    text-align: center;
+}
+
+.checkbox {
+    display: flex;
+    width: fit-content;
+    min-height: 30px;
+    align-items: center;
+    gap: 7px;
+    color: #444444;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.checkbox input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #000000;
+}
+
+.saveArea {
+    position: sticky;
+    bottom: 0;
+    display: grid;
+    padding: 12px 0 max(16px, env(safe-area-inset-bottom));
+    background: #ffffff;
+    gap: 7px;
+}
+
+.saveArea p {
+    min-height: 16px;
+    margin: 0;
+    color: #4b5fca;
+    font-size: 10px;
+    text-align: center;
+}
+
+.saveArea p.error {
+    color: #a8241a;
+}
+
+.saveButton {
+    min-height: 40px;
+    color: #ffffff;
+    background: #000000;
+    border: 1px solid #000000;
+    border-radius: 5px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 919px) {
+    .form {
+        padding-bottom: 0;
+    }
+
+    .saveArea {
+        position: static;
+        padding-bottom: 0;
+    }
+}

@@ -18,14 +18,20 @@ import {
     type ScheduleDay,
     type TripPlaceDetailsPatch,
 } from "../../places/schedule";
-import { createTripEndpointPlaces } from "../../places/trip-endpoints";
+import { reconcileTripEndpointPlaces } from "../../places/trip-endpoints";
 import { useTripStore, type Trip } from "../../trips/store";
+import { defaultMapStyleId } from "../../trips/map-style";
 import { NotFoundPage } from "../not-found";
 import { TripContentPanel } from "./components/TripContentPanel";
 import { TripMap } from "./components/TripMap";
 import { TripNavigation, type TripTab } from "./components/TripNavigation";
 import { TripBudget } from "./components/budget/TripBudget";
+import {
+    getReferencedExpenseMemberIds,
+    snapshotExpenseParticipants,
+} from "./components/budget/budget-summary";
 import { TripPlaceSearch } from "./components/search/TripPlaceSearch";
+import { TripSettings } from "./components/settings/TripSettings";
 import {
     TripDayBadges,
     type TripDayKey,
@@ -55,6 +61,7 @@ export function TripPage() {
 }
 
 function TripWorkspace({ trip }: { trip: Trip }) {
+    const updateTrip = useTripStore((state) => state.updateTrip);
     const [activeTab, setActiveTab] = useState<TripTab>("schedule");
     const [activeDay, setActiveDay] = useState<TripDayKey>(1);
     const [totalBudgetAmount, setTotalBudgetAmount] = useState<number | null>(
@@ -64,17 +71,29 @@ function TripWorkspace({ trip }: { trip: Trip }) {
         () => getTripDays(trip.startDate, trip.endDate),
         [trip.endDate, trip.startDate],
     );
-    const [places, setPlaces] = useState<readonly TripPlace[]>(() => [
-        ...createTripEndpointPlaces(trip, tripDays.length),
-        ...createMockTripPlaces({
-            currencyCode: trip.currencyCode,
-            tripId: trip.id,
-        }),
-    ]);
+    const [places, setPlaces] = useState<readonly TripPlace[]>(() =>
+        reconcileTripEndpointPlaces(
+            createMockTripPlaces({
+                currencyCode: trip.currencyCode,
+                tripId: trip.id,
+            }),
+            trip,
+            tripDays.length,
+        ),
+    );
     const searchHub = trip.arrivalHub ?? trip.departureHub;
     const activePlaces = useMemo(
         () => getTripPlacesForDay(places, activeDay),
         [activeDay, places],
+    );
+    const expenseMemberIds = useMemo(
+        () =>
+            getReferencedExpenseMemberIds(
+                places,
+                trip.members,
+                trip.currencyCode,
+            ),
+        [places, trip.currencyCode, trip.members],
     );
     const [mapFocus, setMapFocus] = useState<
         | { source: "schedule"; placeId: string; request: number }
@@ -161,6 +180,28 @@ function TripWorkspace({ trip }: { trip: Trip }) {
             placeId,
             request: (currentFocus?.request ?? 0) + 1,
         }));
+    }
+
+    function handleSettingsSave(updatedTrip: Trip) {
+        const updatedDayCount = getTripDays(
+            updatedTrip.startDate,
+            updatedTrip.endDate,
+        ).length;
+
+        setPlaces((currentPlaces) =>
+            reconcileTripEndpointPlaces(
+                snapshotExpenseParticipants(currentPlaces, trip.members),
+                updatedTrip,
+                updatedDayCount,
+            ),
+        );
+        setActiveDay((currentDay) =>
+            typeof currentDay === "number" && currentDay > updatedDayCount
+                ? updatedDayCount
+                : currentDay,
+        );
+        updateTrip(updatedTrip);
+        setMapFocus(null);
     }
 
     function handleReorder(sourceId: string, targetId: string) {
@@ -281,6 +322,13 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                         totalBudgetAmount={totalBudgetAmount}
                     />
                 ) : null}
+                {activeTab === "settings" ? (
+                    <TripSettings
+                        expenseMemberIds={expenseMemberIds}
+                        trip={trip}
+                        onSave={handleSettingsSave}
+                    />
+                ) : null}
             </TripContentPanel>
             <main className={`${styles.page} ${styles.mapPage}`}>
                 <h1 className={styles.srOnly}>{trip.name}</h1>
@@ -293,6 +341,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                             ? mapFocus.placeId
                             : null
                     }
+                    mapStyleId={trip.mapStyle ?? defaultMapStyleId}
                     onPlaceSelect={handlePlaceSelect}
                     places={activePlaces}
                     searchPlace={

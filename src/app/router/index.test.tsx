@@ -117,6 +117,44 @@ describe("AppRouter", () => {
         ).toBeVisible();
     });
 
+    it("updates the values collected during trip creation from settings", async () => {
+        const user = userEvent.setup();
+        useAuthStore.setState({
+            status: "authenticated",
+            user: {
+                id: "user-1",
+                displayName: "테스트 사용자",
+                email: "test@example.com",
+                photoUrl: null,
+            },
+        });
+        window.history.replaceState({}, "", "/trip/japan-tokyo");
+
+        render(<AppRouter />);
+
+        await user.click(screen.getByRole("button", { name: "설정" }));
+        const nameInput = screen.getByLabelText("여행 이름");
+        await user.clear(nameInput);
+        await user.type(nameInput, "도쿄 가을 여행");
+        await user.selectOptions(screen.getByLabelText("지도 스타일"), "dark");
+        await user.click(screen.getByRole("button", { name: "설정 저장" }));
+
+        expect(
+            screen.getByRole("heading", { level: 1, name: "도쿄 가을 여행" }),
+        ).toBeInTheDocument();
+        expect(
+            useTripStore
+                .getState()
+                .trips.find(({ id }) => id === "japan-tokyo"),
+        ).toEqual(
+            expect.objectContaining({
+                mapStyle: "dark",
+                name: "도쿄 가을 여행",
+            }),
+        );
+        expect(screen.getByText("여행 설정을 저장했습니다.")).toBeVisible();
+    });
+
     it("renders the trip wizard for authenticated users", () => {
         useAuthStore.setState({
             status: "authenticated",

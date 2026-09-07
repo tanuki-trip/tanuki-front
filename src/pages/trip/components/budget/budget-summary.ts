@@ -1,7 +1,8 @@
-import type {
-    TripCostPaymentMode,
-    TripCostSplit,
-    TripPlace,
+import {
+    getTripPlacesForDay,
+    type TripCostPaymentMode,
+    type TripCostSplit,
+    type TripPlace,
 } from "../../../../places/model";
 
 export type BudgetSummary = {
@@ -59,6 +60,18 @@ export function getInboundCostAmount(place: TripPlace, currencyCode: string) {
 
 function getTripExpenses(places: readonly TripPlace[], currencyCode: string) {
     const expenses: TripExpense[] = [];
+    const scheduledDays = new Set(
+        places.flatMap((place) =>
+            typeof place.day === "number" ? [place.day] : [],
+        ),
+    );
+    const firstPlaceIds = new Set(
+        Array.from(scheduledDays).flatMap((day) => {
+            const firstPlace = getTripPlacesForDay(places, day)[0];
+
+            return firstPlace ? [firstPlace.id] : [];
+        }),
+    );
 
     for (const place of places) {
         if (place.day === "bookmark") {
@@ -76,7 +89,9 @@ function getTripExpenses(places: readonly TripPlace[], currencyCode: string) {
             });
         }
 
-        const inboundAmount = getInboundCostAmount(place, currencyCode);
+        const inboundAmount = firstPlaceIds.has(place.id)
+            ? 0
+            : getInboundCostAmount(place, currencyCode);
         if (inboundAmount > 0) {
             expenses.push({
                 amount: inboundAmount,
@@ -122,22 +137,21 @@ function getIndividualAmounts(
         return null;
     }
 
-    const amounts = memberIds.map((memberId) => {
-        const memberAmount = split.memberAmounts[memberId];
-
-        return Number.isSafeInteger(memberAmount) && memberAmount >= 0
-            ? memberAmount
-            : null;
-    });
-    const assignedTotal = amounts.reduce<number>(
-        (total, memberAmount) => total + (memberAmount ?? 0),
+    const knownMemberIds = new Set(memberIds);
+    const entries = Object.entries(split.memberAmounts);
+    const isValid = entries.every(
+        ([memberId, memberAmount]) =>
+            Number.isSafeInteger(memberAmount) &&
+            memberAmount >= 0 &&
+            (memberAmount === 0 || knownMemberIds.has(memberId)),
+    );
+    const assignedTotal = entries.reduce(
+        (total, [, memberAmount]) => total + memberAmount,
         0,
     );
 
-    return amounts.every(
-        (memberAmount): memberAmount is number => memberAmount !== null,
-    ) && assignedTotal === amount
-        ? amounts
+    return isValid && assignedTotal === amount
+        ? memberIds.map((memberId) => split.memberAmounts[memberId] ?? 0)
         : null;
 }
 
@@ -147,9 +161,16 @@ function addSplitShares(
     amount: number,
     split?: TripCostSplit,
 ) {
-    const individualAmounts = getIndividualAmounts(memberIds, amount, split);
+    if (split?.mode === "individual") {
+        const individualAmounts = getIndividualAmounts(
+            memberIds,
+            amount,
+            split,
+        );
 
-    if (individualAmounts) {
+        if (!individualAmounts) {
+            return;
+        }
         memberIds.forEach((memberId, index) => {
             totals.set(
                 memberId,
@@ -159,18 +180,29 @@ function addSplitShares(
         return;
     }
 
-    const includedMemberIds =
-        split?.mode === "equal"
-            ? memberIds.filter(
-                  (memberId) => !split.excludedMemberIds.includes(memberId),
-              )
-            : memberIds;
+    const knownMemberIds = new Set(memberIds);
+    const snapshottedMemberIds =
+        split?.mode === "equal" ? split.includedMemberIds : undefined;
 
-    addEqualShares(
-        totals,
-        includedMemberIds.length > 0 ? includedMemberIds : memberIds,
-        amount,
-    );
+    if (
+        snapshottedMemberIds &&
+        (new Set(snapshottedMemberIds).size !== snapshottedMemberIds.length ||
+            snapshottedMemberIds.some(
+                (memberId) => !knownMemberIds.has(memberId),
+            ))
+    ) {
+        return;
+    }
+
+    const includedMemberIds = snapshottedMemberIds
+        ? snapshottedMemberIds
+        : split?.mode === "equal"
+          ? memberIds.filter(
+                (memberId) => !split.excludedMemberIds.includes(memberId),
+            )
+          : memberIds;
+
+    addEqualShares(totals, includedMemberIds, amount);
 }
 
 function addPayments(
@@ -197,11 +229,123 @@ function addPayments(
         return;
     }
 
-    const resolvedPayerId = totals.has(payerId ?? "")
-        ? (payerId ?? defaultPayerId)
-        : defaultPayerId;
+    if (payerId && !totals.has(payerId)) {
+        return;
+    }
+
+    const resolvedPayerId = payerId ?? defaultPayerId;
 
     totals.set(resolvedPayerId, (totals.get(resolvedPayerId) ?? 0) + amount);
+}
+
+function createEqualSplit(memberIds: readonly string[]): TripCostSplit {
+    return {
+        mode: "equal",
+        excludedMemberIds: [],
+        includedMemberIds: [...memberIds],
+    };
+}
+
+function snapshotEqualSplit(
+    split: TripCostSplit | undefined,
+    memberIds: readonly string[],
+): TripCostSplit {
+    if (split?.mode !== "equal") {
+        return createEqualSplit(memberIds);
+    }
+
+    return {
+        ...split,
+        includedMemberIds: memberIds.filter(
+            (memberId) => !split.excludedMemberIds.includes(memberId),
+        ),
+    };
+}
+
+export function snapshotExpenseParticipants(
+    places: readonly TripPlace[],
+    members: readonly SettlementMember[],
+) {
+    const memberIds = members.map((member) => member.id);
+
+    return places.map((place) => {
+        const placeCostNeedsSnapshot =
+            getAmount(place.placeCost.amount) > 0 &&
+            (!place.placeCost.split ||
+                (place.placeCost.split.mode === "equal" &&
+                    !place.placeCost.split.includedMemberIds));
+        const inboundCost = place.inbound.cost;
+        const inboundNeedsSnapshot =
+            place.inbound.mode !== "walk" &&
+            !place.inbound.isPassCovered &&
+            inboundCost !== null &&
+            getAmount(inboundCost.amount) > 0 &&
+            (!place.inbound.split ||
+                (place.inbound.split.mode === "equal" &&
+                    !place.inbound.split.includedMemberIds));
+
+        if (!placeCostNeedsSnapshot && !inboundNeedsSnapshot) {
+            return place;
+        }
+
+        return {
+            ...place,
+            placeCost: placeCostNeedsSnapshot
+                ? {
+                      ...place.placeCost,
+                      split: snapshotEqualSplit(
+                          place.placeCost.split,
+                          memberIds,
+                      ),
+                  }
+                : place.placeCost,
+            inbound: inboundNeedsSnapshot
+                ? {
+                      ...place.inbound,
+                      split: snapshotEqualSplit(place.inbound.split, memberIds),
+                  }
+                : place.inbound,
+        } satisfies TripPlace;
+    });
+}
+
+export function getReferencedExpenseMemberIds(
+    places: readonly TripPlace[],
+    members: readonly SettlementMember[],
+    currencyCode: string,
+) {
+    const memberIds = members.map((member) => member.id);
+    const referencedMemberIds = new Set<string>();
+
+    for (const expense of getTripExpenses(places, currencyCode)) {
+        if (expense.payerId) {
+            referencedMemberIds.add(expense.payerId);
+        }
+
+        if (expense.split?.mode === "individual") {
+            Object.entries(expense.split.memberAmounts).forEach(
+                ([memberId, amount]) => {
+                    if (amount > 0) {
+                        referencedMemberIds.add(memberId);
+                    }
+                },
+            );
+            continue;
+        }
+
+        const equalSplit = expense.split;
+        const includedMemberIds = equalSplit?.includedMemberIds
+            ? equalSplit.includedMemberIds
+            : memberIds.filter(
+                  (memberId) =>
+                      !equalSplit?.excludedMemberIds.includes(memberId),
+              );
+        includedMemberIds.forEach((memberId) =>
+            referencedMemberIds.add(memberId),
+        );
+    }
+
+    return referencedMemberIds;
 }
 
 export function getBudgetSummary(

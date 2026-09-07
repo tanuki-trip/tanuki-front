@@ -3,6 +3,7 @@ import { create } from "zustand";
 import type { CountryCode } from "./countries";
 import { getTransportHub, type TransportHub } from "./transport-hubs";
 import type { TransportType } from "./transport";
+import type { MapStyleId } from "./map-style";
 
 export type TripMember = {
     id: string;
@@ -18,6 +19,7 @@ export type Trip = {
     startDate: string;
     endDate: string;
     members: TripMember[];
+    mapStyle?: MapStyleId;
     transportType: TransportType;
     returnTransportType?: TransportType;
     arrivalHub?: TransportHub;
@@ -31,6 +33,7 @@ export type NewTrip = Omit<Trip, "id" | "members"> & {
 type TripState = {
     trips: Trip[];
     addTrip: (trip: NewTrip) => string;
+    updateTrip: (trip: Trip) => void;
     renameTrip: (tripId: string, name: string) => void;
     removeTrip: (tripId: string) => void;
 };
@@ -92,6 +95,12 @@ export const useTripStore = create<TripState>()((set) => ({
 
         return tripId;
     },
+    updateTrip: (updatedTrip) =>
+        set((state) => ({
+            trips: state.trips.map((trip) =>
+                trip.id === updatedTrip.id ? updatedTrip : trip,
+            ),
+        })),
     renameTrip: (tripId, name) =>
         set((state) => ({
             trips: state.trips.map((trip) =>

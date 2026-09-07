@@ -307,6 +307,7 @@ describe("TripBudget", () => {
                 split: {
                     mode: "equal",
                     excludedMemberIds: ["member-1"],
+                    includedMemberIds: ["owner"],
                 },
             }),
         );
@@ -477,6 +478,7 @@ describe("TripBudget", () => {
             split: {
                 mode: "equal",
                 excludedMemberIds: ["owner"],
+                includedMemberIds: ["member-1"],
             },
         });
     });
@@ -576,7 +578,11 @@ describe("TripBudget", () => {
             cost: { amount: 300, currency: "JPY" },
             isPassCovered: false,
             payerId: "owner",
-            split: { mode: "equal", excludedMemberIds: [] },
+            split: {
+                mode: "equal",
+                excludedMemberIds: [],
+                includedMemberIds: ["owner", "member-1"],
+            },
         });
     });
 

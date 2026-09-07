@@ -14,6 +14,7 @@ const mapMocks = vi.hoisted(() => ({
     layerIds: new Set<string>(),
     markerElements: [] as HTMLElement[],
     markerPositions: [] as [number, number][],
+    mapStyles: [] as unknown[],
     remove: vi.fn(),
     routeSource: { setData: vi.fn() },
     sourceAdded: false,
@@ -21,8 +22,15 @@ const mapMocks = vi.hoisted(() => ({
 
 vi.mock("maplibre-gl", () => {
     class MockMap {
-        constructor({ container }: { container: HTMLElement }) {
+        constructor({
+            container,
+            style,
+        }: {
+            container: HTMLElement;
+            style: unknown;
+        }) {
             mapMocks.container = container;
+            mapMocks.mapStyles.push(style);
         }
 
         addControl(...parameters: unknown[]) {
@@ -157,6 +165,7 @@ describe("TripMap", () => {
         mapMocks.layerIds = new Set();
         mapMocks.markerElements = [];
         mapMocks.markerPositions = [];
+        mapMocks.mapStyles = [];
         mapMocks.sourceAdded = false;
         Object.defineProperty(window, "WebGLRenderingContext", {
             configurable: true,
@@ -182,6 +191,7 @@ describe("TripMap", () => {
                 countryName="일본"
                 focusRequest={1}
                 focusedPlaceId="place-1"
+                mapStyleId="positron"
                 onPlaceSelect={onPlaceSelect}
                 places={unsortedPlaces}
             />,
@@ -250,6 +260,7 @@ describe("TripMap", () => {
                 countryName="일본"
                 focusRequest={2}
                 focusedPlaceId="place-2"
+                mapStyleId="positron"
                 onPlaceSelect={onPlaceSelect}
                 places={unsortedPlaces}
             />,
@@ -281,6 +292,7 @@ describe("TripMap", () => {
                 countryName="일본"
                 focusRequest={0}
                 focusedPlaceId={null}
+                mapStyleId="positron"
                 onPlaceSelect={vi.fn()}
                 places={bookmarks}
             />,
@@ -306,6 +318,7 @@ describe("TripMap", () => {
                 countryName="일본"
                 focusRequest={1}
                 focusedPlaceId={null}
+                mapStyleId="positron"
                 onPlaceSelect={vi.fn()}
                 places={places}
                 searchPlace={searchPlace}
@@ -327,6 +340,46 @@ describe("TripMap", () => {
                     zoom: 15,
                 }),
             );
+        });
+    });
+
+    it("reloads the map when its saved style changes", async () => {
+        const { rerender } = render(
+            <TripMap
+                countryCode="JP"
+                countryName="일본"
+                focusRequest={0}
+                focusedPlaceId={null}
+                mapStyleId="positron"
+                onPlaceSelect={vi.fn()}
+                places={places}
+            />,
+        );
+
+        await waitFor(() => {
+            expect(mapMocks.mapStyles).toEqual([
+                "https://tiles.openfreemap.org/styles/positron",
+            ]);
+        });
+
+        rerender(
+            <TripMap
+                countryCode="JP"
+                countryName="일본"
+                focusRequest={0}
+                focusedPlaceId={null}
+                mapStyleId="dark"
+                onPlaceSelect={vi.fn()}
+                places={places}
+            />,
+        );
+
+        await waitFor(() => {
+            expect(mapMocks.mapStyles).toEqual([
+                "https://tiles.openfreemap.org/styles/positron",
+                "https://tiles.openfreemap.org/styles/dark",
+            ]);
+            expect(mapMocks.remove).toHaveBeenCalledTimes(1);
         });
     });
 });

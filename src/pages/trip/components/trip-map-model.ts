@@ -6,8 +6,6 @@ type CountryView = {
     zoom: number;
 };
 
-export const defaultMapStyleUrl =
-    "https://tiles.openfreemap.org/styles/positron";
 export const routeSourceId = "trip-place-route";
 export const routeCasingLayerId = "trip-place-route-casing";
 export const routeLayerId = "trip-place-route-line";

@@ -15,6 +15,7 @@ export type TripCostSplit =
     | {
           mode: "equal";
           excludedMemberIds: string[];
+          includedMemberIds?: string[];
       }
     | {
           mode: "individual";

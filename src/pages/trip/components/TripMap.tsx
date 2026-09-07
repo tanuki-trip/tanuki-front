@@ -9,11 +9,15 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { TripPlace } from "../../../places/model";
 import type { PlaceSearchResult } from "../../../places/search";
 import type { CountryCode } from "../../../trips/countries";
+import {
+    defaultMapStyleId,
+    getMapStyleUrl,
+    type MapStyleId,
+} from "../../../trips/map-style";
 import styles from "./TripMap.module.css";
 import {
     countryViews,
     createRouteData,
-    defaultMapStyleUrl,
     routeCasingLayerId,
     routeLayerId,
     routeSourceId,
@@ -24,13 +28,21 @@ type TripMapProps = {
     countryName: string;
     focusRequest: number;
     focusedPlaceId: string | null;
+    mapStyleId: MapStyleId;
     onPlaceSelect: (placeId: string) => void;
     places: readonly TripPlace[];
     searchPlace?: PlaceSearchResult | null;
 };
 
-const mapStyleUrl =
-    import.meta.env.VITE_MAP_STYLE_URL?.trim() || defaultMapStyleUrl;
+const configuredDefaultMapStyleUrl = import.meta.env.VITE_MAP_STYLE_URL?.trim();
+
+function resolveMapStyleUrl(mapStyleId: MapStyleId) {
+    if (mapStyleId === defaultMapStyleId && configuredDefaultMapStyleUrl) {
+        return configuredDefaultMapStyleUrl;
+    }
+
+    return getMapStyleUrl(mapStyleId);
+}
 
 type MapStatus = "loading" | "ready" | "failed";
 
@@ -50,6 +62,7 @@ export function TripMap({
     countryName,
     focusRequest,
     focusedPlaceId,
+    mapStyleId,
     onPlaceSelect,
     places,
     searchPlace = null,
@@ -61,6 +74,7 @@ export function TripMap({
     const onPlaceSelectRef = useRef(onPlaceSelect);
     const [status, setStatus] = useState<MapStatus>("loading");
     const [loadAttempt, setLoadAttempt] = useState(0);
+    const mapStyleUrl = resolveMapStyleUrl(mapStyleId);
     const focusedPlace = places.find((place) => place.id === focusedPlaceId);
     const focusedLatitude =
         searchPlace?.coordinates.latitude ?? focusedPlace?.coordinates.latitude;
@@ -154,7 +168,7 @@ export function TripMap({
             mapRef.current?.remove();
             mapRef.current = null;
         };
-    }, [countryCode, loadAttempt]);
+    }, [countryCode, loadAttempt, mapStyleUrl]);
 
     useEffect(() => {
         const map = mapRef.current;

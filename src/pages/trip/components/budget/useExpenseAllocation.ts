@@ -73,6 +73,10 @@ function createInitialDraft(
 ): ExpenseAllocationDraft {
     const knownMemberIds = new Set(members.map((member) => member.id));
     const initialSplit = expense?.split;
+    const includedMemberIds =
+        initialSplit?.mode === "equal" && initialSplit.includedMemberIds
+            ? new Set(initialSplit.includedMemberIds)
+            : null;
     const payerSelection =
         expense?.paymentMode === "individual"
             ? individualPayerValue
@@ -83,9 +87,13 @@ function createInitialDraft(
     return {
         excludedMemberIds:
             initialSplit?.mode === "equal"
-                ? initialSplit.excludedMemberIds.filter((memberId) =>
-                      knownMemberIds.has(memberId),
-                  )
+                ? includedMemberIds
+                    ? members
+                          .filter((member) => !includedMemberIds.has(member.id))
+                          .map((member) => member.id)
+                    : initialSplit.excludedMemberIds.filter((memberId) =>
+                          knownMemberIds.has(memberId),
+                      )
                 : [],
         isEqualSplit: initialSplit?.mode !== "individual",
         memberAmounts: Object.fromEntries(
@@ -134,6 +142,12 @@ export function useExpenseAllocation(
             ? {
                   mode: "equal",
                   excludedMemberIds: draft.excludedMemberIds,
+                  includedMemberIds: members
+                      .filter(
+                          (member) =>
+                              !draft.excludedMemberIds.includes(member.id),
+                      )
+                      .map((member) => member.id),
               }
             : {
                   mode: "individual",

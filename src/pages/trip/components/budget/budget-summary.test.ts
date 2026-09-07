@@ -5,7 +5,9 @@ import { deleteTripPlace } from "../../../../places/schedule";
 import {
     getBudgetSummary,
     getMemberSettlements,
+    getReferencedExpenseMemberIds,
     getSettlementTransfers,
+    snapshotExpenseParticipants,
 } from "./budget-summary";
 
 function createPlace(
@@ -78,6 +80,7 @@ describe("getMemberSettlements", () => {
     });
 
     it("uses individual amounts and splits transport equally", () => {
+        const first = createPlace("first", 0);
         const place = createPlace("individual", 12, {
             mode: "individual",
             memberAmounts: {
@@ -92,8 +95,9 @@ describe("getMemberSettlements", () => {
             cost: { amount: 5, currency: "KRW" },
             isPassCovered: false,
         };
+        place.order = 1;
 
-        expect(getMemberSettlements([place], members, "KRW")).toEqual([
+        expect(getMemberSettlements([first, place], members, "KRW")).toEqual([
             { memberId: "owner", amount: 4 },
             { memberId: "member-1", amount: 6 },
             { memberId: "member-2", amount: 7 },
@@ -122,6 +126,7 @@ describe("getMemberSettlements", () => {
     });
 
     it("defaults unassigned transport costs to the first member", () => {
+        const first = createPlace("first", 0);
         const place = createPlace("transport", 0);
         place.inbound = {
             mode: "bus",
@@ -129,14 +134,16 @@ describe("getMemberSettlements", () => {
             cost: { amount: 6, currency: "KRW" },
             isPassCovered: false,
         };
+        place.order = 1;
 
-        expect(getSettlementTransfers([place], members, "KRW")).toEqual([
+        expect(getSettlementTransfers([first, place], members, "KRW")).toEqual([
             { fromMemberId: "member-1", toMemberId: "owner", amount: 2 },
             { fromMemberId: "member-2", toMemberId: "owner", amount: 2 },
         ]);
     });
 
     it("uses the transport payer and split when they are recorded", () => {
+        const first = createPlace("first", 0);
         const place = createPlace("transport", 0);
         place.inbound = {
             mode: "bus",
@@ -149,13 +156,14 @@ describe("getMemberSettlements", () => {
                 excludedMemberIds: ["member-2"],
             },
         };
+        place.order = 1;
 
-        expect(getMemberSettlements([place], members, "KRW")).toEqual([
+        expect(getMemberSettlements([first, place], members, "KRW")).toEqual([
             { memberId: "owner", amount: 5 },
             { memberId: "member-1", amount: 4 },
             { memberId: "member-2", amount: 0 },
         ]);
-        expect(getSettlementTransfers([place], members, "KRW")).toEqual([
+        expect(getSettlementTransfers([first, place], members, "KRW")).toEqual([
             { fromMemberId: "owner", toMemberId: "member-2", amount: 5 },
             {
                 fromMemberId: "member-1",
@@ -199,7 +207,7 @@ describe("getMemberSettlements", () => {
         expect(getSettlementTransfers([place], members, "KRW")).toEqual([]);
     });
 
-    it("falls back to equal direct payments when an individual split is invalid", () => {
+    it("does not reinterpret an invalid individual split", () => {
         const place = createPlace("invalid-onsite", 10, {
             mode: "individual",
             memberAmounts: {
@@ -211,9 +219,109 @@ describe("getMemberSettlements", () => {
         place.placeCost.paymentMode = "individual";
 
         expect(getMemberSettlements([place], members, "KRW")).toEqual([
-            { memberId: "owner", amount: 4 },
-            { memberId: "member-1", amount: 3 },
-            { memberId: "member-2", amount: 3 },
+            { memberId: "owner", amount: 0 },
+            { memberId: "member-1", amount: 0 },
+            { memberId: "member-2", amount: 0 },
+        ]);
+        expect(getSettlementTransfers([place], members, "KRW")).toEqual([]);
+    });
+
+    it("keeps recorded participants when a member is added later", () => {
+        const originalMembers = members.slice(0, 2);
+        const equalPlace = createPlace("equal-snapshot", 10, {
+            mode: "equal",
+            excludedMemberIds: [],
+            includedMemberIds: ["owner", "member-1"],
+        });
+        const individualPlace = createPlace("individual-snapshot", 6, {
+            mode: "individual",
+            memberAmounts: { owner: 2, "member-1": 4 },
+        });
+        individualPlace.order = 1;
+
+        expect(
+            getMemberSettlements(
+                [equalPlace, individualPlace],
+                originalMembers,
+                "KRW",
+            ),
+        ).toEqual([
+            { memberId: "owner", amount: 7 },
+            { memberId: "member-1", amount: 9 },
+        ]);
+        expect(
+            getMemberSettlements([equalPlace, individualPlace], members, "KRW"),
+        ).toEqual([
+            { memberId: "owner", amount: 7 },
+            { memberId: "member-1", amount: 9 },
+            { memberId: "member-2", amount: 0 },
+        ]);
+    });
+
+    it("ignores transport costs without a visible inbound segment", () => {
+        const first = createPlace("first", 0);
+        const second = createPlace("second", 0);
+        first.inbound = {
+            mode: "train",
+            durationMin: 30,
+            cost: { amount: 1_000, currency: "KRW" },
+            isPassCovered: false,
+        };
+        second.order = 1;
+        second.inbound = {
+            mode: "subway",
+            durationMin: 20,
+            cost: { amount: 500, currency: "KRW" },
+            isPassCovered: false,
+        };
+
+        expect(getBudgetSummary([first, second], "KRW").transport).toBe(500);
+    });
+
+    it("snapshots legacy expense participants before members change", () => {
+        const place = createPlace("legacy", 9);
+        place.placeCost.payerId = "member-1";
+        const [snapshottedPlace] = snapshotExpenseParticipants(
+            [place],
+            members,
+        );
+
+        expect(snapshottedPlace?.placeCost.split).toEqual({
+            mode: "equal",
+            excludedMemberIds: [],
+            includedMemberIds: ["owner", "member-1", "member-2"],
+        });
+        expect(
+            getReferencedExpenseMemberIds(
+                snapshottedPlace ? [snapshottedPlace] : [],
+                members,
+                "KRW",
+            ),
+        ).toEqual(new Set(["owner", "member-1", "member-2"]));
+    });
+
+    it("does not assign an unknown payer's payment to the owner", () => {
+        const place = createPlace("unknown-payer", 9, {
+            mode: "equal",
+            excludedMemberIds: [],
+            includedMemberIds: ["owner", "member-1", "member-2"],
+        });
+        place.placeCost.payerId = "removed-member";
+
+        expect(getSettlementTransfers([place], members, "KRW")).toEqual([]);
+    });
+
+    it("does not redistribute an equal split when a recorded member is missing", () => {
+        const place = createPlace("missing-member", 9, {
+            mode: "equal",
+            excludedMemberIds: [],
+            includedMemberIds: ["owner", "removed-member"],
+        });
+
+        expect(getMemberSettlements([place], members, "KRW")).toEqual([
+            { memberId: "owner", amount: 0 },
+            { memberId: "member-1", amount: 0 },
+            { memberId: "member-2", amount: 0 },
         ]);
         expect(getSettlementTransfers([place], members, "KRW")).toEqual([]);
     });
