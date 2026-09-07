@@ -155,6 +155,78 @@ describe("AppRouter", () => {
         expect(screen.getByText("여행 설정을 저장했습니다.")).toBeVisible();
     });
 
+    it("opens the seeded solo itinerary across all four days", async () => {
+        const user = userEvent.setup();
+        useAuthStore.setState({
+            status: "authenticated",
+            user: {
+                id: "user-1",
+                displayName: "테스트 사용자",
+                email: "test@example.com",
+                photoUrl: null,
+            },
+        });
+        window.history.replaceState(
+            {},
+            "",
+            "/trip/japan-yokohama-shirakawago-tokyo",
+        );
+
+        render(<AppRouter />);
+
+        expect(
+            screen.getByRole("heading", {
+                level: 1,
+                name: "요코하마·히나미자와·도쿄 3박 4일",
+            }),
+        ).toBeInTheDocument();
+        expect(
+            within(
+                screen.getByRole("region", { name: "1일차 장소" }),
+            ).getByText("YCAT 1st Lobby"),
+        ).toBeVisible();
+
+        await user.click(
+            screen.getByRole("button", { name: "2일차, 9월 9일 수요일" }),
+        );
+        expect(
+            within(
+                screen.getByRole("region", { name: "2일차 장소" }),
+            ).getByText("오기마치 성터 전망대"),
+        ).toBeVisible();
+
+        await user.click(
+            screen.getByRole("button", { name: "3일차, 9월 10일 목요일" }),
+        );
+        expect(
+            within(
+                screen.getByRole("region", { name: "3일차 장소" }),
+            ).getByText("Cafe Quadrillion"),
+        ).toBeVisible();
+        expect(
+            within(
+                screen.getByRole("region", { name: "3일차 장소" }),
+            ).getByText("음식점 · 18:00까지 출발"),
+        ).toBeVisible();
+
+        await user.click(
+            screen.getByRole("button", { name: "4일차, 9월 11일 금요일" }),
+        );
+        expect(
+            within(
+                screen.getByRole("region", { name: "4일차 장소" }),
+            ).getByText("구 후루카와 저택 가이드"),
+        ).toBeVisible();
+        const dayFourTimeline = screen.getByRole("region", {
+            name: "4일차 장소",
+        });
+        expect(
+            within(dayFourTimeline)
+                .getByLabelText("8번째 장소")
+                .closest("article"),
+        ).toHaveTextContent("나리타 국제공항");
+    });
+
     it("renders the trip wizard for authenticated users", () => {
         useAuthStore.setState({
             status: "authenticated",

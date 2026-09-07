@@ -15,6 +15,9 @@ const mapMocks = vi.hoisted(() => ({
     markerElements: [] as HTMLElement[],
     markerPositions: [] as [number, number][],
     mapStyles: [] as unknown[],
+    popupContents: [] as HTMLElement[],
+    popupPositions: [] as [number, number][],
+    popupRemove: vi.fn(),
     remove: vi.fn(),
     routeSource: { setData: vi.fn() },
     sourceAdded: false,
@@ -105,10 +108,40 @@ vi.mock("maplibre-gl", () => {
 
     class MockNavigationControl {}
 
+    class MockPopup {
+        private content: HTMLElement | null = null;
+
+        addTo() {
+            if (!this.content) {
+                throw new Error("Popup content is required before addTo");
+            }
+
+            mapMocks.container?.append(this.content);
+            return this;
+        }
+
+        remove() {
+            this.content?.remove();
+            mapMocks.popupRemove();
+        }
+
+        setDOMContent(content: HTMLElement) {
+            this.content = content;
+            mapMocks.popupContents.push(content);
+            return this;
+        }
+
+        setLngLat(position: [number, number]) {
+            mapMocks.popupPositions.push(position);
+            return this;
+        }
+    }
+
     return {
         Map: MockMap,
         Marker: MockMarker,
         NavigationControl: MockNavigationControl,
+        Popup: MockPopup,
     };
 });
 
@@ -166,6 +199,8 @@ describe("TripMap", () => {
         mapMocks.markerElements = [];
         mapMocks.markerPositions = [];
         mapMocks.mapStyles = [];
+        mapMocks.popupContents = [];
+        mapMocks.popupPositions = [];
         mapMocks.sourceAdded = false;
         Object.defineProperty(window, "WebGLRenderingContext", {
             configurable: true,
@@ -251,8 +286,8 @@ describe("TripMap", () => {
             expect(firstMarker).toHaveAttribute("aria-pressed", "true");
         });
 
-        fireEvent.click(firstMarker);
-        expect(onPlaceSelect).toHaveBeenCalledWith("place-1");
+        fireEvent.click(secondMarker);
+        expect(onPlaceSelect).toHaveBeenCalledWith("place-2");
 
         rerender(
             <TripMap
@@ -309,6 +344,101 @@ describe("TripMap", () => {
                 }),
             );
         });
+    });
+
+    it("opens directions without zooming again when a focused marker is activated", async () => {
+        const onPlaceSelect = vi.fn();
+
+        const { rerender } = render(
+            <TripMap
+                countryCode="JP"
+                countryName="일본"
+                focusRequest={0}
+                focusedPlaceId={null}
+                mapStyleId="positron"
+                onPlaceSelect={onPlaceSelect}
+                places={places}
+            />,
+        );
+
+        const firstMarker = await screen.findByRole("button", {
+            name: "지도에서 센소지 보기",
+        });
+        const secondMarker = screen.getByRole("button", {
+            name: "지도에서 호텔 니혼바시 보기",
+        });
+
+        fireEvent.click(secondMarker);
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        rerender(
+            <TripMap
+                countryCode="JP"
+                countryName="일본"
+                focusRequest={1}
+                focusedPlaceId="place-2"
+                mapStyleId="positron"
+                onPlaceSelect={onPlaceSelect}
+                places={places}
+            />,
+        );
+        await waitFor(() => {
+            expect(secondMarker).toHaveAttribute("aria-pressed", "true");
+        });
+
+        fireEvent.click(secondMarker);
+        const popup = screen.getByRole("dialog", {
+            name: "호텔 니혼바시 이동 경로",
+        });
+        const currentLocationLink = screen.getByRole("link", {
+            name: "현재 위치에서 이동",
+        });
+        const previousLocationLink = screen.getByRole("link", {
+            name: "이전 위치에서 이동",
+        });
+
+        expect(popup).toBeVisible();
+        expect(currentLocationLink).toHaveAttribute(
+            "href",
+            "https://www.google.com/maps/dir/?api=1&destination=35.683%2C139.773",
+        );
+        expect(previousLocationLink).toHaveAttribute(
+            "href",
+            "https://www.google.com/maps/dir/?api=1&destination=35.683%2C139.773&origin=35.7148%2C139.7967",
+        );
+        expect(currentLocationLink).toHaveAttribute("target", "_blank");
+        expect(currentLocationLink).toHaveAttribute(
+            "rel",
+            "noopener noreferrer",
+        );
+        expect(mapMocks.popupPositions).toContainEqual([139.773, 35.683]);
+        expect(onPlaceSelect).toHaveBeenCalledTimes(1);
+        expect(mapMocks.easeTo).toHaveBeenCalledTimes(1);
+
+        fireEvent.click(firstMarker);
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        rerender(
+            <TripMap
+                countryCode="JP"
+                countryName="일본"
+                focusRequest={3}
+                focusedPlaceId="place-1"
+                mapStyleId="positron"
+                onPlaceSelect={onPlaceSelect}
+                places={places}
+            />,
+        );
+        await waitFor(() => {
+            expect(firstMarker).toHaveAttribute("aria-pressed", "true");
+        });
+        fireEvent.click(firstMarker);
+        expect(
+            screen.getByRole("dialog", { name: "센소지 이동 경로" }),
+        ).toBeVisible();
+        expect(
+            screen.queryByRole("link", { name: "이전 위치에서 이동" }),
+        ).not.toBeInTheDocument();
+        expect(onPlaceSelect).toHaveBeenCalledTimes(2);
+        expect(mapMocks.easeTo).toHaveBeenCalledTimes(2);
     });
 
     it("renders a selected search result and moves the map to it", async () => {

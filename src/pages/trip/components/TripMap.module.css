@@ -96,6 +96,59 @@
     font-size: 16px;
 }
 
+.directionsPopup {
+    display: grid;
+    min-width: 176px;
+    gap: 6px;
+    color: #000000;
+}
+
+.directionsPopup strong {
+    overflow: hidden;
+    margin: 0 22px 2px 0;
+    font-size: 13px;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.directionsPopup a {
+    display: flex;
+    min-height: 34px;
+    padding: 0 10px;
+    align-items: center;
+    color: #000000;
+    border: 1px solid #d8d8d8;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.directionsPopup a:hover {
+    background: #f3f3f3;
+    border-color: #000000;
+}
+
+.directionsPopup a:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 2px;
+}
+
+.map :global(.trip-directions-popup .maplibregl-popup-content) {
+    padding: 12px;
+    border: 1px solid #000000;
+    border-radius: 6px;
+    box-shadow: 0 6px 22px rgb(0 0 0 / 24%);
+}
+
+.map :global(.trip-directions-popup .maplibregl-popup-close-button) {
+    width: 32px;
+    height: 32px;
+    color: #000000;
+    font-size: 20px;
+}
+
 .map :global(.maplibregl-ctrl-bottom-left),
 .map :global(.maplibregl-ctrl-bottom-right) {
     top: calc(12px + env(safe-area-inset-top));

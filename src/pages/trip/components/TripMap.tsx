@@ -3,10 +3,11 @@ import type {
     GeoJSONSource,
     Map as MapLibreMap,
     Marker as MapLibreMarker,
+    Popup as MapLibrePopup,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-import type { TripPlace } from "../../../places/model";
+import { compareTripPlaceOrder, type TripPlace } from "../../../places/model";
 import type { PlaceSearchResult } from "../../../places/search";
 import type { CountryCode } from "../../../trips/countries";
 import {
@@ -57,6 +58,73 @@ type SearchMarker = {
     marker: MapLibreMarker;
 };
 
+type RoutePopup = {
+    placeId: string;
+    popup: MapLibrePopup;
+};
+
+function formatCoordinates(place: TripPlace) {
+    return `${place.coordinates.latitude},${place.coordinates.longitude}`;
+}
+
+function createGoogleMapsDirectionsUrl(
+    destination: TripPlace,
+    origin?: TripPlace,
+) {
+    const parameters = new URLSearchParams({
+        api: "1",
+        destination: formatCoordinates(destination),
+    });
+
+    if (origin) {
+        parameters.set("origin", formatCoordinates(origin));
+    }
+
+    return `https://www.google.com/maps/dir/?${parameters.toString()}`;
+}
+
+function createDirectionsLink(label: string, href: string) {
+    const link = document.createElement("a");
+
+    link.href = href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = label;
+
+    return link;
+}
+
+function createDirectionsPopupContent(
+    place: TripPlace,
+    previousPlace?: TripPlace,
+) {
+    const content = document.createElement("div");
+    const title = document.createElement("strong");
+
+    content.className = styles.directionsPopup;
+    content.setAttribute("role", "dialog");
+    content.setAttribute("aria-label", `${place.name} 이동 경로`);
+    title.textContent = place.name;
+    content.append(
+        title,
+        createDirectionsLink(
+            "현재 위치에서 이동",
+            createGoogleMapsDirectionsUrl(place),
+        ),
+    );
+
+    if (previousPlace) {
+        content.append(
+            createDirectionsLink(
+                "이전 위치에서 이동",
+                createGoogleMapsDirectionsUrl(place, previousPlace),
+            ),
+        );
+    }
+
+    return content;
+}
+
 export function TripMap({
     countryCode,
     countryName,
@@ -71,6 +139,7 @@ export function TripMap({
     const mapRef = useRef<MapLibreMap | null>(null);
     const markerRef = useRef(new Map<string, PlaceMarker>());
     const searchMarkerRef = useRef<SearchMarker | null>(null);
+    const routePopupRef = useRef<RoutePopup | null>(null);
     const onPlaceSelectRef = useRef(onPlaceSelect);
     const [status, setStatus] = useState<MapStatus>("loading");
     const [loadAttempt, setLoadAttempt] = useState(0);
@@ -165,6 +234,8 @@ export function TripMap({
             markers.clear();
             searchMarkerRef.current?.marker.remove();
             searchMarkerRef.current = null;
+            routePopupRef.current?.popup.remove();
+            routePopupRef.current = null;
             mapRef.current?.remove();
             mapRef.current = null;
         };
@@ -180,13 +251,22 @@ export function TripMap({
         let disposed = false;
 
         const syncMarkers = async () => {
-            const { Marker } = await import("maplibre-gl");
+            const { Marker, Popup } = await import("maplibre-gl");
 
             if (disposed || mapRef.current !== map) {
                 return;
             }
 
             const placeIds = new Set(places.map((place) => place.id));
+            const orderedPlaces = [...places].sort(compareTripPlaceOrder);
+
+            if (
+                routePopupRef.current &&
+                !placeIds.has(routePopupRef.current.placeId)
+            ) {
+                routePopupRef.current.popup.remove();
+                routePopupRef.current = null;
+            }
 
             markerRef.current.forEach(({ marker }, placeId) => {
                 if (!placeIds.has(placeId)) {
@@ -210,10 +290,6 @@ export function TripMap({
                     badge.className = styles.markerBadge;
                     badge.setAttribute("aria-hidden", "true");
                     element.append(badge);
-                    element.addEventListener("click", (event) => {
-                        event.stopPropagation();
-                        onPlaceSelectRef.current(place.id);
-                    });
 
                     placeMarker = {
                         badge,
@@ -235,6 +311,45 @@ export function TripMap({
                         place.coordinates.latitude,
                     ]);
                 }
+
+                placeMarker.element.onclick = (event) => {
+                    event.stopPropagation();
+                    const isAlreadyFocused = focusedPlaceId === place.id;
+
+                    if (!isAlreadyFocused) {
+                        routePopupRef.current?.popup.remove();
+                        routePopupRef.current = null;
+                        onPlaceSelectRef.current(place.id);
+                        return;
+                    }
+
+                    const placeIndex = orderedPlaces.findIndex(
+                        ({ id }) => id === place.id,
+                    );
+                    const previousPlace =
+                        placeIndex > 0
+                            ? orderedPlaces[placeIndex - 1]
+                            : undefined;
+
+                    routePopupRef.current?.popup.remove();
+                    const popup = new Popup({
+                        className: "trip-directions-popup",
+                        closeButton: true,
+                        closeOnClick: true,
+                        maxWidth: "240px",
+                        offset: 32,
+                    })
+                        .setLngLat([
+                            place.coordinates.longitude,
+                            place.coordinates.latitude,
+                        ])
+                        .setDOMContent(
+                            createDirectionsPopupContent(place, previousPlace),
+                        )
+                        .addTo(map);
+
+                    routePopupRef.current = { placeId: place.id, popup };
+                };
 
                 placeMarker.badge.textContent = markerLabel;
                 placeMarker.element.setAttribute(
@@ -297,6 +412,16 @@ export function TripMap({
             disposed = true;
         };
     }, [focusedPlaceId, places, searchPlace, status]);
+
+    useEffect(() => {
+        if (
+            routePopupRef.current &&
+            routePopupRef.current.placeId !== focusedPlaceId
+        ) {
+            routePopupRef.current.popup.remove();
+            routePopupRef.current = null;
+        }
+    }, [focusedPlaceId]);
 
     useEffect(() => {
         const map = mapRef.current;

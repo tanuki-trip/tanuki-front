@@ -77,6 +77,20 @@ export const initialTrips: Trip[] = [
         arrivalHub: getTransportHub("kr-cju"),
         departureHub: getTransportHub("kr-cju"),
     },
+    {
+        id: "japan-yokohama-shirakawago-tokyo",
+        name: "요코하마·히나미자와·도쿄 3박 4일",
+        country: "일본",
+        countryCode: "JP",
+        currencyCode: "JPY",
+        startDate: "2026-09-08",
+        endDate: "2026-09-11",
+        members: [{ id: "yokohama-member-owner", name: "나" }],
+        transportType: "flight",
+        returnTransportType: "flight",
+        arrivalHub: getTransportHub("jp-nrt"),
+        departureHub: getTransportHub("jp-nrt"),
+    },
 ];
 
 export const useTripStore = create<TripState>()((set) => ({
