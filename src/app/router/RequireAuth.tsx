@@ -20,7 +20,9 @@ export function RequireAuth({
                 aria-busy="true"
                 aria-label="로그인 상태 확인 중"
                 className={styles.pending}
-            />
+            >
+                <span role="status">여행을 준비하고 있어요.</span>
+            </main>
         );
     }
 

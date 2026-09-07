@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import {
@@ -29,13 +29,10 @@ import { NotFoundPage } from "../not-found";
 import { TripContentPanel } from "./components/TripContentPanel";
 import { TripMap } from "./components/TripMap";
 import { TripNavigation, type TripTab } from "./components/TripNavigation";
-import { TripBudget } from "./components/budget/TripBudget";
 import {
     getReferencedExpenseMemberIds,
     snapshotExpenseParticipants,
 } from "./components/budget/budget-summary";
-import { TripPlaceSearch } from "./components/search/TripPlaceSearch";
-import { TripSettings } from "./components/settings/TripSettings";
 import {
     TripDayBadges,
     type TripDayKey,
@@ -43,6 +40,17 @@ import {
 import { TripPlaceTimeline } from "./components/schedule/TripPlaceTimeline";
 import { getTripDays } from "./trip-days";
 import styles from "./style.module.css";
+
+const TripBudget = lazy(async () => ({
+    default: (await import("./components/budget/TripBudget")).TripBudget,
+}));
+const TripPlaceSearch = lazy(async () => ({
+    default: (await import("./components/search/TripPlaceSearch"))
+        .TripPlaceSearch,
+}));
+const TripSettings = lazy(async () => ({
+    default: (await import("./components/settings/TripSettings")).TripSettings,
+}));
 
 const panelTitles: Record<TripTab, string> = {
     schedule: "일정 관리",
@@ -302,53 +310,62 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                         />
                     </>
                 ) : null}
-                {activeTab === "search" ? (
-                    <TripPlaceSearch
-                        countryCode={trip.countryCode}
-                        countryName={trip.country}
-                        dayCount={tripDays.length}
-                        defaultDay={activeDay}
-                        onPlaceAdd={handleSearchPlaceAdd}
-                        onPlaceSelect={handleSearchPlaceSelect}
-                        searchCenter={searchHub?.coordinates}
-                        searchRegion={searchHub?.region}
-                        selectedPlaceId={
-                            mapFocus?.source === "search"
-                                ? mapFocus.place.id
-                                : null
-                        }
-                    />
-                ) : null}
-                {activeTab === "budget" ? (
-                    <TripBudget
-                        activeDay={activeDay}
-                        currencyCode={trip.currencyCode}
-                        endDate={trip.endDate}
-                        members={trip.members}
-                        onDayChange={handleDayChange}
-                        onInboundChange={handleInboundUpdate}
-                        onPlaceCostChange={handlePlaceCostChange}
-                        onTotalBudgetChange={setTotalBudgetAmount}
-                        places={places}
-                        startDate={trip.startDate}
-                        totalBudgetAmount={totalBudgetAmount}
-                    />
-                ) : null}
-                {activeTab === "settings" ? (
-                    <TripSettings
-                        expenseMemberIds={expenseMemberIds}
-                        mapStyleId={mapStyleId}
-                        onMapStyleSave={handleMapStyleSave}
-                        trip={trip}
-                        onSave={handleSettingsSave}
-                    />
-                ) : null}
+                <Suspense
+                    fallback={
+                        <div className={styles.tabLoading} role="status">
+                            내용 불러오는 중
+                        </div>
+                    }
+                >
+                    {activeTab === "search" ? (
+                        <TripPlaceSearch
+                            countryCode={trip.countryCode}
+                            countryName={trip.country}
+                            dayCount={tripDays.length}
+                            defaultDay={activeDay}
+                            onPlaceAdd={handleSearchPlaceAdd}
+                            onPlaceSelect={handleSearchPlaceSelect}
+                            searchCenter={searchHub?.coordinates}
+                            searchRegion={searchHub?.region}
+                            selectedPlaceId={
+                                mapFocus?.source === "search"
+                                    ? mapFocus.place.id
+                                    : null
+                            }
+                        />
+                    ) : null}
+                    {activeTab === "budget" ? (
+                        <TripBudget
+                            activeDay={activeDay}
+                            currencyCode={trip.currencyCode}
+                            endDate={trip.endDate}
+                            members={trip.members}
+                            onDayChange={handleDayChange}
+                            onInboundChange={handleInboundUpdate}
+                            onPlaceCostChange={handlePlaceCostChange}
+                            onTotalBudgetChange={setTotalBudgetAmount}
+                            places={places}
+                            startDate={trip.startDate}
+                            totalBudgetAmount={totalBudgetAmount}
+                        />
+                    ) : null}
+                    {activeTab === "settings" ? (
+                        <TripSettings
+                            expenseMemberIds={expenseMemberIds}
+                            mapStyleId={mapStyleId}
+                            onMapStyleSave={handleMapStyleSave}
+                            trip={trip}
+                            onSave={handleSettingsSave}
+                        />
+                    ) : null}
+                </Suspense>
             </TripContentPanel>
             <main className={`${styles.page} ${styles.mapPage}`}>
                 <h1 className={styles.srOnly}>{trip.name}</h1>
                 <TripMap
                     countryCode={trip.countryCode}
                     countryName={trip.country}
+                    fallbackCoordinates={searchHub?.coordinates}
                     focusRequest={mapFocus?.request ?? 0}
                     focusedPlaceId={
                         mapFocus?.source === "schedule"

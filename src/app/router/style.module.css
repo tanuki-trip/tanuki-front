@@ -1,3 +1,8 @@
 .pending {
+    display: grid;
     min-height: 100dvh;
+    color: #666666;
+    background: #ffffff;
+    font-size: 13px;
+    place-items: center;
 }

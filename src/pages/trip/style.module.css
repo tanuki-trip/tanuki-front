@@ -33,6 +33,15 @@
     border: 0;
 }
 
+.tabLoading {
+    display: grid;
+    min-height: 120px;
+    flex: 1;
+    color: #666666;
+    font-size: 13px;
+    place-items: center;
+}
+
 @media (min-width: 920px) {
     .page {
         margin-left: 72px;

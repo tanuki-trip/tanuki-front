@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { TripPlace } from "../../../places/model";
 import type { PlaceSearchResult } from "../../../places/search";
@@ -14,6 +14,7 @@ const mapMocks = vi.hoisted(() => ({
     layerIds: new Set<string>(),
     markerElements: [] as HTMLElement[],
     markerPositions: [] as [number, number][],
+    mapOptions: [] as Record<string, unknown>[],
     mapStyles: [] as unknown[],
     popupContents: [] as HTMLElement[],
     popupPositions: [] as [number, number][],
@@ -21,18 +22,20 @@ const mapMocks = vi.hoisted(() => ({
     remove: vi.fn(),
     routeSource: { setData: vi.fn() },
     sourceAdded: false,
+    workerUrls: [] as string[],
 }));
 
 vi.mock("maplibre-gl", () => {
     class MockMap {
-        constructor({
-            container,
-            style,
-        }: {
+        constructor(options: {
             container: HTMLElement;
             style: unknown;
+            [key: string]: unknown;
         }) {
+            const { container, style } = options;
+
             mapMocks.container = container;
+            mapMocks.mapOptions.push(options);
             mapMocks.mapStyles.push(style);
         }
 
@@ -137,11 +140,16 @@ vi.mock("maplibre-gl", () => {
         }
     }
 
+    const setWorkerUrl = (workerUrl: string) => {
+        mapMocks.workerUrls.push(workerUrl);
+    };
+
     return {
         Map: MockMap,
         Marker: MockMarker,
         NavigationControl: MockNavigationControl,
         Popup: MockPopup,
+        setWorkerUrl,
     };
 });
 
@@ -198,10 +206,12 @@ describe("TripMap", () => {
         mapMocks.layerIds = new Set();
         mapMocks.markerElements = [];
         mapMocks.markerPositions = [];
+        mapMocks.mapOptions = [];
         mapMocks.mapStyles = [];
         mapMocks.popupContents = [];
         mapMocks.popupPositions = [];
         mapMocks.sourceAdded = false;
+        mapMocks.workerUrls = [];
         Object.defineProperty(window, "WebGLRenderingContext", {
             configurable: true,
             value: class WebGLRenderingContext {},
@@ -215,6 +225,43 @@ describe("TripMap", () => {
                     }) as MediaQueryList,
             ),
         });
+        vi.stubGlobal(
+            "fetch",
+            vi.fn().mockResolvedValue({
+                arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
+                ok: true,
+                status: 200,
+            }),
+        );
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+        vi.unstubAllGlobals();
+    });
+
+    it("keeps a slow first map load in the loading state", () => {
+        vi.useFakeTimers();
+        vi.mocked(fetch).mockReturnValue(new Promise(() => undefined));
+
+        render(
+            <TripMap
+                countryCode="JP"
+                countryName="일본"
+                focusRequest={0}
+                focusedPlaceId={null}
+                mapStyleId="positron"
+                onPlaceSelect={vi.fn()}
+                places={places}
+            />,
+        );
+
+        vi.advanceTimersByTime(10_001);
+
+        expect(screen.getByRole("status")).toHaveTextContent(
+            "지도 불러오는 중",
+        );
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     });
 
     it("renders numbered place markers and focuses the selected place", async () => {
@@ -243,6 +290,18 @@ describe("TripMap", () => {
         expect(secondMarker).toHaveTextContent("2");
         expect(mapMocks.markerPositions).toContainEqual([139.7967, 35.7148]);
         expect(mapMocks.markerPositions).toContainEqual([139.773, 35.683]);
+        expect(mapMocks.mapOptions[0]).toEqual(
+            expect.objectContaining({
+                center: [139.7967, 35.7148],
+                zoom: 15,
+            }),
+        );
+        expect(mapMocks.mapOptions[0]).not.toHaveProperty("bounds");
+        expect(fetch).toHaveBeenCalledWith(
+            "https://tiles.openfreemap.org/styles/positron",
+            expect.objectContaining({ signal: expect.any(AbortSignal) }),
+        );
+        expect(mapMocks.workerUrls).toEqual([expect.any(String)]);
         expect(mapMocks.addSource).toHaveBeenCalledWith(
             "trip-place-route",
             expect.objectContaining({
@@ -275,16 +334,9 @@ describe("TripMap", () => {
             "place-labels",
         );
         await waitFor(() => {
-            expect(mapMocks.easeTo).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    center: [139.7967, 35.7148],
-                    duration: 700,
-                    offset: [0, 0],
-                    zoom: 15,
-                }),
-            );
             expect(firstMarker).toHaveAttribute("aria-pressed", "true");
         });
+        expect(mapMocks.easeTo).not.toHaveBeenCalled();
 
         fireEvent.click(secondMarker);
         expect(onPlaceSelect).toHaveBeenCalledWith("place-2");
@@ -461,16 +513,13 @@ describe("TripMap", () => {
             }),
         ).toBeInTheDocument();
         expect(mapMocks.markerPositions).toContainEqual([139.7955, 35.7134]);
-
-        await waitFor(() => {
-            expect(mapMocks.easeTo).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    center: [139.7955, 35.7134],
-                    duration: 700,
-                    zoom: 15,
-                }),
-            );
-        });
+        expect(mapMocks.mapOptions[0]).toEqual(
+            expect.objectContaining({
+                center: [139.7955, 35.7134],
+                zoom: 15,
+            }),
+        );
+        expect(mapMocks.easeTo).not.toHaveBeenCalled();
     });
 
     it("reloads the map when its saved style changes", async () => {

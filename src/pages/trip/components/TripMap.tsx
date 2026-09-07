@@ -6,19 +6,20 @@ import type {
     Popup as MapLibrePopup,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import mapLibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 
 import { compareTripPlaceOrder, type TripPlace } from "../../../places/model";
 import type { PlaceSearchResult } from "../../../places/search";
 import type { CountryCode } from "../../../trips/countries";
-import {
-    defaultMapStyleId,
-    getMapStyleUrl,
-    type MapStyleId,
-} from "../../../trips/map-style";
+import type { MapStyleId } from "../../../trips/map-style";
 import styles from "./TripMap.module.css";
 import {
-    countryViews,
+    loadTripMapResources,
+    resolveTripMapStyleUrl,
+} from "./trip-map-loader";
+import {
     createRouteData,
+    getInitialMapView,
     routeCasingLayerId,
     routeLayerId,
     routeSourceId,
@@ -27,6 +28,7 @@ import {
 type TripMapProps = {
     countryCode: CountryCode;
     countryName: string;
+    fallbackCoordinates?: TripPlace["coordinates"];
     focusRequest: number;
     focusedPlaceId: string | null;
     mapStyleId: MapStyleId;
@@ -34,16 +36,6 @@ type TripMapProps = {
     places: readonly TripPlace[];
     searchPlace?: PlaceSearchResult | null;
 };
-
-const configuredDefaultMapStyleUrl = import.meta.env.VITE_MAP_STYLE_URL?.trim();
-
-function resolveMapStyleUrl(mapStyleId: MapStyleId) {
-    if (mapStyleId === defaultMapStyleId && configuredDefaultMapStyleUrl) {
-        return configuredDefaultMapStyleUrl;
-    }
-
-    return getMapStyleUrl(mapStyleId);
-}
 
 type MapStatus = "loading" | "ready" | "failed";
 
@@ -128,6 +120,7 @@ function createDirectionsPopupContent(
 export function TripMap({
     countryCode,
     countryName,
+    fallbackCoordinates,
     focusRequest,
     focusedPlaceId,
     mapStyleId,
@@ -141,19 +134,47 @@ export function TripMap({
     const searchMarkerRef = useRef<SearchMarker | null>(null);
     const routePopupRef = useRef<RoutePopup | null>(null);
     const onPlaceSelectRef = useRef(onPlaceSelect);
+    const placesRef = useRef(places);
+    const focusTargetRef = useRef<{
+        coordinates: TripPlace["coordinates"] | undefined;
+        key: string | null;
+    }>({ coordinates: undefined, key: null });
+    const skipNextFocusTargetRef = useRef<string | null>(null);
     const [status, setStatus] = useState<MapStatus>("loading");
     const [loadAttempt, setLoadAttempt] = useState(0);
-    const mapStyleUrl = resolveMapStyleUrl(mapStyleId);
+    const mapStyleUrl = resolveTripMapStyleUrl(mapStyleId);
     const focusedPlace = places.find((place) => place.id === focusedPlaceId);
     const focusedLatitude =
         searchPlace?.coordinates.latitude ?? focusedPlace?.coordinates.latitude;
     const focusedLongitude =
         searchPlace?.coordinates.longitude ??
         focusedPlace?.coordinates.longitude;
+    const focusTargetKey = searchPlace
+        ? `search:${searchPlace.id}`
+        : focusedPlaceId
+          ? `schedule:${focusedPlaceId}`
+          : null;
 
     useEffect(() => {
         onPlaceSelectRef.current = onPlaceSelect;
     }, [onPlaceSelect]);
+
+    useEffect(() => {
+        placesRef.current = places;
+    }, [places]);
+
+    useEffect(() => {
+        focusTargetRef.current = {
+            coordinates:
+                focusedLatitude === undefined || focusedLongitude === undefined
+                    ? undefined
+                    : {
+                          latitude: focusedLatitude,
+                          longitude: focusedLongitude,
+                      },
+            key: focusTargetKey,
+        };
+    }, [focusTargetKey, focusedLatitude, focusedLongitude]);
 
     useEffect(() => {
         const container = containerRef.current;
@@ -164,15 +185,25 @@ export function TripMap({
         }
 
         let disposed = false;
-        let loaded = false;
-        let loadTimeout: number | undefined;
-        const view = countryViews[countryCode];
+        const abortController = new AbortController();
+        const initialFocusTarget = focusTargetRef.current;
+        const initialView = getInitialMapView(
+            countryCode,
+            placesRef.current,
+            fallbackCoordinates,
+            initialFocusTarget.coordinates,
+        );
+        skipNextFocusTargetRef.current = initialFocusTarget.key;
 
         setStatus("loading");
 
         const initializeMap = async () => {
             try {
-                const { Map, NavigationControl } = await import("maplibre-gl");
+                const { Map, NavigationControl, setWorkerUrl } =
+                    await loadTripMapResources(
+                        mapStyleUrl,
+                        abortController.signal,
+                    );
 
                 if (disposed) {
                     return;
@@ -186,11 +217,23 @@ export function TripMap({
                     return;
                 }
 
+                setWorkerUrl(mapLibreWorkerUrl);
+
                 const map = new Map({
                     container,
                     style: mapStyleUrl,
-                    center: view.center,
-                    zoom: view.zoom,
+                    ...(initialView.kind === "camera"
+                        ? {
+                              center: initialView.center,
+                              zoom: initialView.zoom,
+                          }
+                        : {
+                              bounds: initialView.bounds,
+                              fitBoundsOptions: {
+                                  padding: initialView.padding,
+                                  maxZoom: initialView.maxZoom,
+                              },
+                          }),
                     attributionControl: { compact: true },
                     dragRotate: false,
                     pitchWithRotate: false,
@@ -204,20 +247,14 @@ export function TripMap({
                     "bottom-left",
                 );
 
-                loadTimeout = window.setTimeout(() => {
-                    if (!loaded && !disposed) {
-                        setStatus("failed");
-                    }
-                }, 10000);
-
-                map.once("load", () => {
-                    loaded = true;
-                    window.clearTimeout(loadTimeout);
-
+                const markReady = () => {
                     if (!disposed) {
                         setStatus("ready");
                     }
-                });
+                };
+
+                map.once("style.load", markReady);
+                map.once("load", markReady);
             } catch {
                 if (!disposed) {
                     setStatus("failed");
@@ -229,7 +266,7 @@ export function TripMap({
 
         return () => {
             disposed = true;
-            window.clearTimeout(loadTimeout);
+            abortController.abort();
             markers.forEach(({ marker }) => marker.remove());
             markers.clear();
             searchMarkerRef.current?.marker.remove();
@@ -239,7 +276,7 @@ export function TripMap({
             mapRef.current?.remove();
             mapRef.current = null;
         };
-    }, [countryCode, loadAttempt, mapStyleUrl]);
+    }, [countryCode, fallbackCoordinates, loadAttempt, mapStyleUrl]);
 
     useEffect(() => {
         const map = mapRef.current;
@@ -503,6 +540,11 @@ export function TripMap({
             return;
         }
 
+        if (skipNextFocusTargetRef.current === focusTargetKey) {
+            skipNextFocusTargetRef.current = null;
+            return;
+        }
+
         const isDesktop = window.matchMedia?.("(min-width: 920px)").matches;
         const prefersReducedMotion = window.matchMedia?.(
             "(prefers-reduced-motion: reduce)",
@@ -517,7 +559,13 @@ export function TripMap({
                 ? [0, 0]
                 : [0, -Math.round(container.clientHeight * 0.25)],
         });
-    }, [focusRequest, focusedLatitude, focusedLongitude, status]);
+    }, [
+        focusRequest,
+        focusedLatitude,
+        focusedLongitude,
+        focusTargetKey,
+        status,
+    ]);
 
     return (
         <section

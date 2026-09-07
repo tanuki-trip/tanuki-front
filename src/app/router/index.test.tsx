@@ -19,6 +19,10 @@ vi.mock("../../places/search", async (importOriginal) => {
     };
 });
 
+vi.mock("./TripMapPreloader", () => ({
+    TripMapPreloader: () => null,
+}));
+
 const mockedSearchPlaces = vi.mocked(searchPlaces);
 
 const initialAuthState = useAuthStore.getState();
@@ -32,14 +36,15 @@ afterEach(() => {
 });
 
 describe("AppRouter", () => {
-    it("renders onboarding at the root for guests", () => {
+    it("renders onboarding at the root for guests", async () => {
         useAuthStore.setState({ status: "guest", user: null });
         window.history.replaceState({}, "", "/");
 
         render(<AppRouter />);
+        await vi.dynamicImportSettled();
 
         expect(
-            screen.getByRole("heading", {
+            await screen.findByRole("heading", {
                 name: "가고 싶은 곳을 지도에서 찾아보세요.",
             }),
         ).toBeInTheDocument();
@@ -75,7 +80,9 @@ describe("AppRouter", () => {
         );
         await user.click(screen.getByRole("button", { name: "장소 검색" }));
         await user.type(
-            screen.getByRole("searchbox", { name: "장소명 또는 주소" }),
+            await screen.findByRole("searchbox", {
+                name: "장소명 또는 주소",
+            }),
             "도쿄 타워",
         );
         await user.click(screen.getByRole("button", { name: "검색" }));
@@ -111,7 +118,9 @@ describe("AppRouter", () => {
 
         await user.click(screen.getByRole("button", { name: "예산" }));
 
-        const budget = screen.getByRole("region", { name: "2일차 예산" });
+        const budget = await screen.findByRole("region", {
+            name: "2일차 예산",
+        });
         expect(
             within(budget).getByRole("button", {
                 name: "도쿄 타워 금액 수정, 현재 미입력",
@@ -135,7 +144,7 @@ describe("AppRouter", () => {
         render(<AppRouter />);
 
         await user.click(screen.getByRole("button", { name: "설정" }));
-        const nameInput = screen.getByLabelText("여행 이름");
+        const nameInput = await screen.findByLabelText("여행 이름");
         await user.clear(nameInput);
         await user.type(nameInput, "도쿄 가을 여행");
         await user.selectOptions(screen.getByLabelText("지도 스타일"), "dark");
@@ -234,7 +243,7 @@ describe("AppRouter", () => {
         ).toHaveTextContent("나리타 국제공항");
     });
 
-    it("renders the trip wizard for authenticated users", () => {
+    it("renders the trip wizard for authenticated users", async () => {
         useAuthStore.setState({
             status: "authenticated",
             user: {
@@ -247,13 +256,14 @@ describe("AppRouter", () => {
         window.history.replaceState({}, "", "/trips/new");
 
         render(<AppRouter />);
+        await vi.dynamicImportSettled();
 
         expect(
-            screen.getByRole("heading", {
+            await screen.findByRole("heading", {
                 name: "여행 이름을 정해주세요",
             }),
         ).toBeInTheDocument();
-    });
+    }, 10_000);
 
     it("opens the selected trip from the trip list", async () => {
         const user = userEvent.setup();
@@ -269,9 +279,10 @@ describe("AppRouter", () => {
         window.history.replaceState({}, "", "/");
 
         render(<AppRouter />);
+        await vi.dynamicImportSettled();
 
         await user.click(
-            screen.getByRole("link", {
+            await screen.findByRole("link", {
                 name: "도쿄 4박 5일 여행 열기",
             }),
         );
@@ -373,7 +384,7 @@ describe("AppRouter", () => {
             screen.queryByRole("heading", { name: "예산" }),
         ).not.toBeInTheDocument();
         expect(
-            screen.getByRole("region", { name: "예산 요약" }),
+            await screen.findByRole("region", { name: "예산 요약" }),
         ).toBeInTheDocument();
         expect(screen.getByText("현재 사용한 금액")).toBeVisible();
         expect(
@@ -413,14 +424,15 @@ describe("AppRouter", () => {
         ).toBeInTheDocument();
     });
 
-    it("redirects guests away from the trip wizard", () => {
+    it("redirects guests away from the trip wizard", async () => {
         useAuthStore.setState({ status: "guest", user: null });
         window.history.replaceState({}, "", "/trips/new");
 
         render(<AppRouter />);
+        await vi.dynamicImportSettled();
 
         expect(
-            screen.getByRole("heading", {
+            await screen.findByRole("heading", {
                 name: "가고 싶은 곳을 지도에서 찾아보세요.",
             }),
         ).toBeInTheDocument();
