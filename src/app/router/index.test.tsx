@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { useAuthStore } from "../../auth/store";
 import { searchPlaces } from "../../places/search";
 import { initialTrips, useTripStore } from "../../trips/store";
+import { getStoredTripMapStyle } from "../../trips/map-style";
 
 import { AppRouter } from ".";
 
@@ -26,6 +27,7 @@ afterEach(() => {
     vi.clearAllMocks();
     useAuthStore.setState(initialAuthState, true);
     useTripStore.setState({ trips: initialTrips });
+    window.localStorage.clear();
     window.history.replaceState({}, "", "/");
 });
 
@@ -148,10 +150,15 @@ describe("AppRouter", () => {
                 .trips.find(({ id }) => id === "japan-tokyo"),
         ).toEqual(
             expect.objectContaining({
-                mapStyle: "dark",
                 name: "도쿄 가을 여행",
             }),
         );
+        expect(
+            useTripStore
+                .getState()
+                .trips.find(({ id }) => id === "japan-tokyo"),
+        ).not.toHaveProperty("mapStyle");
+        expect(getStoredTripMapStyle("japan-tokyo")).toBe("dark");
         expect(screen.getByText("여행 설정을 저장했습니다.")).toBeVisible();
     });
 

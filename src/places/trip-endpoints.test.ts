@@ -121,7 +121,7 @@ describe("reconcileTripEndpointPlaces", () => {
 
         const result = reconcileTripEndpointPlaces(
             places,
-            { ...trip, name: "이름만 변경", mapStyle: "dark" },
+            { ...trip, name: "이름만 변경" },
             5,
         );
 

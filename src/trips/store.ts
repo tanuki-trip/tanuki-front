@@ -3,7 +3,6 @@ import { create } from "zustand";
 import type { CountryCode } from "./countries";
 import { getTransportHub, type TransportHub } from "./transport-hubs";
 import type { TransportType } from "./transport";
-import type { MapStyleId } from "./map-style";
 
 export type TripMember = {
     id: string;
@@ -19,7 +18,6 @@ export type Trip = {
     startDate: string;
     endDate: string;
     members: TripMember[];
-    mapStyle?: MapStyleId;
     transportType: TransportType;
     returnTransportType?: TransportType;
     arrivalHub?: TransportHub;

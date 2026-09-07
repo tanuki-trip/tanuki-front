@@ -20,7 +20,11 @@ import {
 } from "../../places/schedule";
 import { reconcileTripEndpointPlaces } from "../../places/trip-endpoints";
 import { useTripStore, type Trip } from "../../trips/store";
-import { defaultMapStyleId } from "../../trips/map-style";
+import {
+    getStoredTripMapStyle,
+    storeTripMapStyle,
+    type MapStyleId,
+} from "../../trips/map-style";
 import { NotFoundPage } from "../not-found";
 import { TripContentPanel } from "./components/TripContentPanel";
 import { TripMap } from "./components/TripMap";
@@ -64,6 +68,9 @@ function TripWorkspace({ trip }: { trip: Trip }) {
     const updateTrip = useTripStore((state) => state.updateTrip);
     const [activeTab, setActiveTab] = useState<TripTab>("schedule");
     const [activeDay, setActiveDay] = useState<TripDayKey>(1);
+    const [mapStyleId, setMapStyleId] = useState(() =>
+        getStoredTripMapStyle(trip.id),
+    );
     const [totalBudgetAmount, setTotalBudgetAmount] = useState<number | null>(
         null,
     );
@@ -204,6 +211,11 @@ function TripWorkspace({ trip }: { trip: Trip }) {
         setMapFocus(null);
     }
 
+    function handleMapStyleSave(nextMapStyleId: MapStyleId) {
+        storeTripMapStyle(trip.id, nextMapStyleId);
+        setMapStyleId(nextMapStyleId);
+    }
+
     function handleReorder(sourceId: string, targetId: string) {
         setPlaces((currentPlaces) =>
             reorderDayPlaces(currentPlaces, activeDay, sourceId, targetId),
@@ -325,6 +337,8 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                 {activeTab === "settings" ? (
                     <TripSettings
                         expenseMemberIds={expenseMemberIds}
+                        mapStyleId={mapStyleId}
+                        onMapStyleSave={handleMapStyleSave}
                         trip={trip}
                         onSave={handleSettingsSave}
                     />
@@ -341,7 +355,7 @@ function TripWorkspace({ trip }: { trip: Trip }) {
                             ? mapFocus.placeId
                             : null
                     }
-                    mapStyleId={trip.mapStyle ?? defaultMapStyleId}
+                    mapStyleId={mapStyleId}
                     onPlaceSelect={handlePlaceSelect}
                     places={activePlaces}
                     searchPlace={

@@ -12,6 +12,8 @@ describe("TripSettings", () => {
         render(
             <TripSettings
                 expenseMemberIds={noExpenseMembers}
+                mapStyleId="positron"
+                onMapStyleSave={vi.fn()}
                 trip={initialTrips[0]}
                 onSave={vi.fn()}
             />,
@@ -33,11 +35,14 @@ describe("TripSettings", () => {
 
     it("edits members and saves a different return route", async () => {
         const user = userEvent.setup();
+        const onMapStyleSave = vi.fn();
         const onSave = vi.fn();
 
         render(
             <TripSettings
                 expenseMemberIds={noExpenseMembers}
+                mapStyleId="positron"
+                onMapStyleSave={onMapStyleSave}
                 trip={initialTrips[0]}
                 onSave={onSave}
             />,
@@ -72,9 +77,10 @@ describe("TripSettings", () => {
                 departureHub: expect.objectContaining({
                     id: "jp-hakata-port",
                 }),
-                mapStyle: "dark",
             }),
         );
+        expect(onSave.mock.calls[0][0]).not.toHaveProperty("mapStyle");
+        expect(onMapStyleSave).toHaveBeenCalledWith("dark");
         expect(screen.getByText("여행 설정을 저장했습니다.")).toBeVisible();
     });
 
@@ -85,6 +91,8 @@ describe("TripSettings", () => {
         render(
             <TripSettings
                 expenseMemberIds={noExpenseMembers}
+                mapStyleId="positron"
+                onMapStyleSave={vi.fn()}
                 trip={initialTrips[0]}
                 onSave={onSave}
             />,
@@ -111,6 +119,8 @@ describe("TripSettings", () => {
         render(
             <TripSettings
                 expenseMemberIds={new Set(["japan-member-1"])}
+                mapStyleId="positron"
+                onMapStyleSave={vi.fn()}
                 trip={initialTrips[0]}
                 onSave={vi.fn()}
             />,
@@ -132,6 +142,8 @@ describe("TripSettings", () => {
         render(
             <TripSettings
                 expenseMemberIds={noExpenseMembers}
+                mapStyleId="positron"
+                onMapStyleSave={vi.fn()}
                 trip={initialTrips[0]}
                 onSave={vi.fn()}
             />,

@@ -3,11 +3,7 @@ import { useState, type FormEvent } from "react";
 
 import { getTripDayCount } from "../../../trips/new/trip-form";
 import type { Trip, TripMember } from "../../../../trips/store";
-import {
-    defaultMapStyleId,
-    mapStyleOptions,
-    type MapStyleId,
-} from "../../../../trips/map-style";
+import { mapStyleOptions, type MapStyleId } from "../../../../trips/map-style";
 import {
     isHubTransportType,
     transportLabels,
@@ -21,6 +17,8 @@ import styles from "./TripSettings.module.css";
 
 type TripSettingsProps = {
     expenseMemberIds: ReadonlySet<string>;
+    mapStyleId: MapStyleId;
+    onMapStyleSave: (mapStyleId: MapStyleId) => void;
     onSave: (trip: Trip) => void;
     trip: Trip;
 };
@@ -41,7 +39,7 @@ type TripSettingsDraft = {
 
 const transportOptions: readonly TransportType[] = ["flight", "ship", "other"];
 
-function createDraft(trip: Trip): TripSettingsDraft {
+function createDraft(trip: Trip, mapStyleId: MapStyleId): TripSettingsDraft {
     const returnTransportType = trip.returnTransportType ?? trip.transportType;
     const usesDifferentReturn =
         trip.transportType !== "other" &&
@@ -53,7 +51,7 @@ function createDraft(trip: Trip): TripSettingsDraft {
         departureHubId: trip.departureHub?.id ?? "",
         endDate: trip.endDate,
         isDayTrip: trip.startDate === trip.endDate,
-        mapStyle: trip.mapStyle ?? defaultMapStyleId,
+        mapStyle: mapStyleId,
         members: trip.members.map((member) => ({ ...member })),
         name: trip.name,
         returnTransportType,
@@ -65,10 +63,12 @@ function createDraft(trip: Trip): TripSettingsDraft {
 
 export function TripSettings({
     expenseMemberIds,
+    mapStyleId,
+    onMapStyleSave,
     onSave,
     trip,
 }: TripSettingsProps) {
-    const [draft, setDraft] = useState(() => createDraft(trip));
+    const [draft, setDraft] = useState(() => createDraft(trip, mapStyleId));
     const [message, setMessage] = useState("");
     const [hasError, setHasError] = useState(false);
     const arrivalHubs = isHubTransportType(draft.transportType)
@@ -196,7 +196,6 @@ export function TripSettings({
             name,
             startDate: draft.startDate,
             endDate: draft.endDate,
-            mapStyle: draft.mapStyle,
             members,
             transportType: draft.transportType,
             returnTransportType:
@@ -208,6 +207,7 @@ export function TripSettings({
             departureHub:
                 draft.transportType === "other" ? undefined : departureHub,
         });
+        onMapStyleSave(draft.mapStyle);
         setDraft((current) => ({ ...current, name, members }));
         setHasError(false);
         setMessage("여행 설정을 저장했습니다.");
